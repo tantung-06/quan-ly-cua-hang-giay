@@ -1,0 +1,91 @@
+package dto;
+
+public class BienTheSanPham {
+    private String maBienThe;
+    private String maSanPham;
+    private String maMau;
+    private String maKichThuong;
+    private double giaBan;
+    private int soLuongTon;
+    private String hinhAnh;
+    private String trangThai;
+
+    public BienTheSanPham() {
+    }
+
+    public BienTheSanPham(String maBienThe, String maSanPham, String maMau, String maKichThuong, double giaBan,
+            int soLuongTon, String hinhAnh, String trangThai) {
+        this.maBienThe = maBienThe;
+        this.maSanPham = maSanPham;
+        this.maMau = maMau;
+        this.maKichThuong = maKichThuong;
+        this.giaBan = giaBan;
+        this.soLuongTon = soLuongTon;
+        this.hinhAnh = hinhAnh;
+        this.trangThai = trangThai;
+    }
+
+    public String getMaBienThe() {
+        return maBienThe;
+    }
+
+    public void setMaBienThe(String maBienThe) {
+        this.maBienThe = maBienThe;
+    }
+
+    public String getMaSanPham() {
+        return maSanPham;
+    }
+
+    public void setMaSanPham(String maSanPham) {
+        this.maSanPham = maSanPham;
+    }
+
+    public String getMaMau() {
+        return maMau;
+    }
+
+    public void setMaMau(String maMau) {
+        this.maMau = maMau;
+    }
+
+    public String getMaKichThuong() {
+        return maKichThuong;
+    }
+
+    public void setMaKichThuong(String maKichThuong) {
+        this.maKichThuong = maKichThuong;
+    }
+
+    public double getGiaBan() {
+        return giaBan;
+    }
+
+    public void setGiaBan(double giaBan) {
+        this.giaBan = giaBan;
+    }
+
+    public int getSoLuongTon() {
+        return soLuongTon;
+    }
+
+    public void setSoLuongTon(int soLuongTon) {
+        this.soLuongTon = soLuongTon;
+    }
+
+    public String getHinhAnh() {
+        return hinhAnh;
+    }
+
+    public void setHinhAnh(String hinhAnh) {
+        this.hinhAnh = hinhAnh;
+    }
+
+    public String getTrangThai() {
+        return trangThai;
+    }
+
+    public void setTrangThai(String trangThai) {
+        this.trangThai = trangThai;
+    }
+}
