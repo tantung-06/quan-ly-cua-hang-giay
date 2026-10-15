@@ -2,7 +2,7 @@ package dto;
 
 public class ChiTietPhieuNhap {
     private String maPhieuNhap;
-    private String maBienThe;
+    private String maSanPham;
     private int soLuong;
     private double giaNhap;
     private double thanhTien;
@@ -10,9 +10,9 @@ public class ChiTietPhieuNhap {
     public ChiTietPhieuNhap() {
     }
 
-    public ChiTietPhieuNhap(String maPhieuNhap, String maBienThe, int soLuong, double giaNhap, double thanhTien) {
+    public ChiTietPhieuNhap(String maPhieuNhap, String maSanPham, int soLuong, double giaNhap, double thanhTien) {
         this.maPhieuNhap = maPhieuNhap;
-        this.maBienThe = maBienThe;
+        this.maSanPham = maSanPham;
         this.soLuong = soLuong;
         this.giaNhap = giaNhap;
         this.thanhTien = thanhTien;
@@ -26,12 +26,12 @@ public class ChiTietPhieuNhap {
         this.maPhieuNhap = maPhieuNhap;
     }
 
-    public String getMaBienThe() {
-        return maBienThe;
+    public String getMaSanPham() {
+        return maSanPham;
     }
 
-    public void setMaBienThe(String maBienThe) {
-        this.maBienThe = maBienThe;
+    public void setMaSanPham(String maSanPham) {
+        this.maSanPham = maSanPham;
     }
 
     public int getSoLuong() {
