@@ -4,7 +4,7 @@ public class BienTheSanPham {
     private String maBienThe;
     private String maSanPham;
     private String maMau;
-    private String maKichThuong;
+    private String maKichThuoc;
     private double giaBan;
     private int soLuongTon;
     private String hinhAnh;
@@ -13,12 +13,12 @@ public class BienTheSanPham {
     public BienTheSanPham() {
     }
 
-    public BienTheSanPham(String maBienThe, String maSanPham, String maMau, String maKichThuong, double giaBan,
+    public BienTheSanPham(String maBienThe, String maSanPham, String maMau, String maKichThuoc, double giaBan,
             int soLuongTon, String hinhAnh, String trangThai) {
         this.maBienThe = maBienThe;
         this.maSanPham = maSanPham;
         this.maMau = maMau;
-        this.maKichThuong = maKichThuong;
+        this.maKichThuoc = maKichThuoc;
         this.giaBan = giaBan;
         this.soLuongTon = soLuongTon;
         this.hinhAnh = hinhAnh;
@@ -49,12 +49,12 @@ public class BienTheSanPham {
         this.maMau = maMau;
     }
 
-    public String getMaKichThuong() {
-        return maKichThuong;
+    public String getMaKichThuoc() {
+        return maKichThuoc;
     }
 
-    public void setMaKichThuong(String maKichThuong) {
-        this.maKichThuong = maKichThuong;
+    public void setMaKichThuoc(String maKichThuoc) {
+        this.maKichThuoc = maKichThuoc;
     }
 
     public double getGiaBan() {
