@@ -22,18 +22,6 @@ CREATE TABLE LoaiGiay (
     CONSTRAINT PK_LoaiGiay PRIMARY KEY (maLoaiGiay)
 ) ENGINE=InnoDB;
 
-CREATE TABLE MauSac (
-    maMau VARCHAR(20) NOT NULL,
-    tenMau VARCHAR(50) NOT NULL,
-    CONSTRAINT PK_MauSac PRIMARY KEY (maMau)
-) ENGINE=InnoDB;
-
-CREATE TABLE KichThuoc (
-    maKichThuoc VARCHAR(20) NOT NULL,
-    tenKichThuoc VARCHAR(20) NOT NULL,
-    CONSTRAINT PK_KichThuoc PRIMARY KEY (maKichThuoc)
-) ENGINE=InnoDB;
-
 CREATE TABLE KhachHang (
     maKhachHang VARCHAR(20) NOT NULL,
     ho VARCHAR(50) NOT NULL,
@@ -44,6 +32,7 @@ CREATE TABLE KhachHang (
     diemTichLuy INT NOT NULL DEFAULT 0,
     trangThai VARCHAR(20) NOT NULL DEFAULT 'HOAT_DONG' CHECK (trangThai IN ('HOAT_DONG', 'NGUNG')),
     CONSTRAINT PK_KhachHang PRIMARY KEY (maKhachHang)
+    CONSTRAINT CK_KhachHang_DiemTichLuy CHECK (diemTichLuy >= 0)
 ) ENGINE=InnoDB;
 
 CREATE TABLE NhaCungCap (
@@ -59,10 +48,10 @@ CREATE TABLE NhaCungCap (
 CREATE TABLE KhuyenMai (
     maKhuyenMai VARCHAR(20) NOT NULL,
     tenKhuyenMai VARCHAR(100) NOT NULL,
-    donHangToiThieu DOUBLE NOT NULL,
+    donHangToiThieu DECIMAL(14,2) NOT NULL,
     loaiKhuyenMai VARCHAR(20) NOT NULL DEFAULT 'GIAM_TI_LE'
         CHECK (loaiKhuyenMai IN ('GIAM_TI_LE', 'GIAM_TIEN')),
-    mucGiam DOUBLE NOT NULL,
+    mucGiam DECIMAL(14,2) NOT NULL,
     ngayBatDau DATE NOT NULL,
     ngayKetThuc DATE NOT NULL,
     trangThai VARCHAR(20) NOT NULL CHECK (trangThai IN ('AP_DUNG', 'HET_HAN')),
@@ -102,38 +91,19 @@ CREATE TABLE NhanVien (
 CREATE TABLE SanPham (
     maSanPham VARCHAR(20) NOT NULL,
     tenSanPham VARCHAR(150) NOT NULL,
-    maThuongHieu VARCHAR(20) NOT NULL,
     maLoaiGiay VARCHAR(20) NOT NULL,
-    moTa TEXT NULL,
-    trangThai VARCHAR(20) NOT NULL DEFAULT 'DANG_BAN'
-        CHECK (trangThai IN ('DANG_BAN', 'NGUNG_BAN')),
+    maThuongHieu VARCHAR(20) NOT NULL,
+    giaBan DECIMAL(14,2) NOT NULL,
+    soLuongTon INT NOT NULL DEFAULT 0,
+    trangThai VARCHAR(20) NOT NULL DEFAULT 'DANG_BAN',
     CONSTRAINT PK_SanPham PRIMARY KEY (maSanPham),
     CONSTRAINT FK_SanPham_ThuongHieu FOREIGN KEY (maThuongHieu)
         REFERENCES ThuongHieu(maThuongHieu) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT FK_SanPham_LoaiGiay FOREIGN KEY (maLoaiGiay)
-        REFERENCES LoaiGiay(maLoaiGiay) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB;
-
-CREATE TABLE BienTheSanPham (
-    maBienThe VARCHAR(20) NOT NULL,
-    maSanPham VARCHAR(20) NOT NULL,
-    maMau VARCHAR(20) NOT NULL,
-    maKichThuoc VARCHAR(20) NOT NULL,
-    giaBan DOUBLE NOT NULL,
-    soLuongTon INT NOT NULL DEFAULT 0,
-    hinhAnh VARCHAR(255) NULL,
-    trangThai VARCHAR(20) NOT NULL DEFAULT 'CON_HANG'
-        CHECK (trangThai IN ('CON_HANG', 'HET_HANG', 'NGUNG_BAN')),
-    CONSTRAINT PK_BienTheSanPham PRIMARY KEY (maBienThe),
-    CONSTRAINT UQ_BienThe_SP_Mau_Size UNIQUE (maSanPham, maMau, maKichThuoc),
-    CONSTRAINT FK_BienThe_SanPham FOREIGN KEY (maSanPham)
-        REFERENCES SanPham(maSanPham) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT FK_BienThe_MauSac FOREIGN KEY (maMau)
-        REFERENCES MauSac(maMau) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT FK_BienThe_KichThuoc FOREIGN KEY (maKichThuoc)
-        REFERENCES KichThuoc(maKichThuoc) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT CK_BienThe_SoLuong CHECK (soLuongTon >= 0),
-    CONSTRAINT CK_BienThe_GiaBan CHECK (giaBan >= 0)
+        REFERENCES LoaiGiay(maLoaiGiay) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT CK_SanPham_GiaBan CHECK (giaBan >= 0),
+    CONSTRAINT CK_SanPham_SoLuongTon CHECK (soLuongTon >= 0),
+    CONSTRAINT CK_SanPham_TrangThai CHECK (trangThai IN ('DANG_BAN', 'NGUNG_BAN'))
 ) ENGINE=InnoDB;
 
 CREATE TABLE PhieuNhap (
@@ -141,7 +111,7 @@ CREATE TABLE PhieuNhap (
     ngayNhap DATE NOT NULL,
     maNhanVien VARCHAR(20) NOT NULL,
     maNCC VARCHAR(20) NOT NULL,
-    tongTien DOUBLE NOT NULL DEFAULT 0,
+    tongTien DECIMAL(14,2) NOT NULL DEFAULT 0,
     trangThai VARCHAR(20) NOT NULL DEFAULT 'CHO_XU_LY'
         CHECK (trangThai IN ('CHO_XU_LY', 'DA_NHAP', 'HUY')),
     CONSTRAINT PK_PhieuNhap PRIMARY KEY (maPhieuNhap),
@@ -153,16 +123,18 @@ CREATE TABLE PhieuNhap (
 
 CREATE TABLE ChiTietPhieuNhap (
     maPhieuNhap VARCHAR(20) NOT NULL,
-    maBienThe VARCHAR(20) NOT NULL,
+    maSanPham VARCHAR(20) NOT NULL,
     soLuong INT NOT NULL,
-    giaNhap DOUBLE NOT NULL,
-    thanhTien DOUBLE NOT NULL,
-    CONSTRAINT PK_ChiTietPhieuNhap PRIMARY KEY (maPhieuNhap, maBienThe),
+    giaNhap DECIMAL(14,2) NOT NULL,
+    thanhTien DECIMAL(14,2) NOT NULL,
+    CONSTRAINT PK_ChiTietPhieuNhap PRIMARY KEY (maPhieuNhap, maSanPham),
     CONSTRAINT FK_CTPN_PhieuNhap FOREIGN KEY (maPhieuNhap)
         REFERENCES PhieuNhap(maPhieuNhap) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT FK_CTPN_BienThe FOREIGN KEY (maBienThe)
-        REFERENCES BienTheSanPham(maBienThe) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT FK_CTPN_SanPham FOREIGN KEY (maSanPham)
+        REFERENCES SanPham(maSanPham) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT CK_CTPN_SoLuong CHECK (soLuong > 0)
+    CONSTRAINT CK_CTPN_GiaNhap CHECK (giaNhap >= 0),
+    CONSTRAINT CK_CTPN_ThanhTien CHECK (thanhTien >= 0)
 ) ENGINE=InnoDB;
 
 CREATE TABLE PhieuXuat (
@@ -173,7 +145,7 @@ CREATE TABLE PhieuXuat (
     maKhuyenMai VARCHAR(20) NULL,
     phuongThucThanhToan VARCHAR(20) NOT NULL DEFAULT 'TIEN_MAT'
         CHECK (phuongThucThanhToan IN ('TIEN_MAT', 'CHUYEN_KHOAN', 'THE')),
-    tongTien DOUBLE NOT NULL DEFAULT 0,
+    tongTien DECIMAL(14,2) NOT NULL DEFAULT 0,
     trangThai VARCHAR(20) NOT NULL DEFAULT 'CHO_XU_LY'
         CHECK (trangThai IN ('CHO_XU_LY', 'DA_XUAT', 'HUY')),
     CONSTRAINT PK_PhieuXuat PRIMARY KEY (maPhieuXuat),
@@ -187,58 +159,26 @@ CREATE TABLE PhieuXuat (
 
 CREATE TABLE ChiTietPhieuXuat (
     maPhieuXuat VARCHAR(20) NOT NULL,
-    maBienThe VARCHAR(20) NOT NULL,
+    maSanPham VARCHAR(20) NOT NULL,
     soLuong INT NOT NULL,
-    donGia DOUBLE NOT NULL,
-    thanhTien DOUBLE NOT NULL,
-    CONSTRAINT PK_ChiTietPhieuXuat PRIMARY KEY (maPhieuXuat, maBienThe),
+    donGia DECIMAL(12,2) NOT NULL,
+    thanhTien DECIMAL(14,2) NOT NULL,
+    CONSTRAINT PK_ChiTietPhieuXuat PRIMARY KEY (maPhieuXuat, maSanPham),
     CONSTRAINT FK_CTPX_PhieuXuat FOREIGN KEY (maPhieuXuat)
         REFERENCES PhieuXuat(maPhieuXuat) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT FK_CTPX_BienThe FOREIGN KEY (maBienThe)
-        REFERENCES BienTheSanPham(maBienThe) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT FK_CTPX_SanPham FOREIGN KEY (maSanPham)
+        REFERENCES SanPham(maSanPham) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT CK_CTPX_SoLuong CHECK (soLuong > 0)
+    CONSTRAINT CK_CTPX_DonGia CHECK (donGia >= 0),
+    CONSTRAINT CK_CTPX_ThanhTien CHECK (thanhTien >= 0)
 ) ENGINE=InnoDB;
 
-CREATE TABLE PhieuTraHang (
-    maPhieuTra VARCHAR(20) NOT NULL,
-    maPhieuXuat VARCHAR(20) NOT NULL,
-    ngayTra DATE NOT NULL,
-    maNhanVien VARCHAR(20) NOT NULL,
-    lyDoTra VARCHAR(255) NULL,
-    hinhThucXuLy VARCHAR(20) NOT NULL DEFAULT 'HOAN_TIEN'
-        CHECK (hinhThucXuLy IN ('HOAN_TIEN', 'DOI_SAN_PHAM')),
-    tongTienHoan DOUBLE NOT NULL DEFAULT 0,
-    trangThai VARCHAR(20) NOT NULL DEFAULT 'CHO_XU_LY'
-        CHECK (trangThai IN ('CHO_XU_LY', 'DA_XU_LY', 'TU_CHOI')),
-    CONSTRAINT PK_PhieuTraHang PRIMARY KEY (maPhieuTra),
-    CONSTRAINT FK_PhieuTra_PhieuXuat FOREIGN KEY (maPhieuXuat)
-        REFERENCES PhieuXuat(maPhieuXuat) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT FK_PhieuTra_NhanVien FOREIGN KEY (maNhanVien)
-        REFERENCES NhanVien(maNhanVien) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB;
-
-CREATE TABLE ChiTietPhieuTraHang (
-    maPhieuTra VARCHAR(20) NOT NULL,
-    maBienThe VARCHAR(20) NOT NULL,
-    soLuongTra INT NOT NULL,
-    donGia DOUBLE NOT NULL,
-    thanhTien DOUBLE NOT NULL,
-    tinhTrangHang VARCHAR(20) NOT NULL DEFAULT 'CON_MOI'
-        CHECK (tinhTrangHang IN ('CON_MOI', 'LOI_NHA_SX', 'HU_HONG_DO_KHACH')),
-    CONSTRAINT PK_ChiTietPhieuTraHang PRIMARY KEY (maPhieuTra, maBienThe),
-    CONSTRAINT FK_CTPT_PhieuTra FOREIGN KEY (maPhieuTra)
-        REFERENCES PhieuTraHang(maPhieuTra) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT FK_CTPT_BienThe FOREIGN KEY (maBienThe)
-        REFERENCES BienTheSanPham(maBienThe) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT CK_CTPT_SoLuong CHECK (soLuongTra > 0)
-) ENGINE=InnoDB;
-
-CREATE INDEX IDX_BienThe_SanPham ON BienTheSanPham(maSanPham);
-CREATE INDEX IDX_BienThe_TrangThai ON BienTheSanPham(trangThai);
 CREATE INDEX IDX_SanPham_TrangThai ON SanPham(trangThai);
 CREATE INDEX IDX_PhieuXuat_NgayLap ON PhieuXuat(ngayLap);
 CREATE INDEX IDX_PhieuNhap_NgayNhap ON PhieuNhap(ngayNhap);
 CREATE INDEX IDX_KhachHang_SDT ON KhachHang(soDienThoai);
 CREATE INDEX IDX_PhieuXuat_KhachHang ON PhieuXuat(maKhachHang);
-CREATE INDEX IDX_PhieuTra_PhieuXuat ON PhieuTraHang(maPhieuXuat);
-CREATE INDEX IDX_PhieuTra_NgayTra ON PhieuTraHang(ngayTra);
+CREATE INDEX IDX_PhieuXuat_NgayLap ON PhieuXuat(ngayLap);
+CREATE INDEX IDX_PhieuNhap_NgayNhap ON PhieuNhap(ngayNhap);
+CREATE INDEX IDX_KhachHang_SDT ON KhachHang(soDienThoai);
+CREATE INDEX IDX_PhieuXuat_KhachHang ON PhieuXuat(maKhachHang);
