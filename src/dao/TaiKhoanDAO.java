@@ -116,7 +116,7 @@ public class TaiKhoanDAO {
     }
 
     public ArrayList<TaiKhoan> getByTrangThai(String trangThai){
-        ArrayList<TaiKhoan> ds = new ArrayList();
+        ArrayList<TaiKhoan> ds = new ArrayList<>();
         String sql = "SELECT * FROM TaiKhoan WHERE trangThai=?";
         try (Connection conn = DatabaseConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {

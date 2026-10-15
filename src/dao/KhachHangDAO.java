@@ -8,7 +8,7 @@ import config.DatabaseConnection;
 
 public class KhachHangDAO {
     public ArrayList<KhachHang> getAll() {
-        ArrayList<KhachHang> ds = new ArrayList();
+        ArrayList<KhachHang> ds = new ArrayList<>();
         String sql = "SELECT * FROM KhachHang ORDER BY maKhachHang ASC";
         try (Connection conn = DatabaseConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -33,7 +33,7 @@ public class KhachHangDAO {
     }
 
     public ArrayList<KhachHang> getByTrangThai(String trangThai){
-        ArrayList<KhachHang> ds = new ArrayList();
+        ArrayList<KhachHang> ds = new ArrayList<>();
         String sql = "SELECT * FROM KhachHang WHERE trangThai=?";
         try (Connection conn = DatabaseConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -81,7 +81,7 @@ public class KhachHangDAO {
     }
 
     public ArrayList<KhachHang> search(String keyword){
-        ArrayList<KhachHang> ds = new ArrayList();
+        ArrayList<KhachHang> ds = new ArrayList<>();
         String sql = "SELECT * FROM KhachHang WHERE ho LIKE ? OR ten LIKE ? OR soDienThoai LIKE ? OR email LIKE ?";
         String kw = "%" + keyword + "%";
         try (Connection conn = DatabaseConnection.getConnection();

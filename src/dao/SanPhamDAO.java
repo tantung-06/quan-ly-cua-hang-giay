@@ -17,9 +17,10 @@ public class SanPhamDAO {
                 SanPham s = new SanPham(
                         rs.getString("maSanPham"),
                         rs.getString("tenSanPham"),
-                        rs.getString("maThuongHieu"),
                         rs.getString("maLoaiGiay"),
-                        rs.getString("moTa"),
+                        rs.getString("maThuongHieu"),
+                        rs.getDouble("giaBan"),
+                        rs.getInt("soLuongTon"),
                         rs.getString("trangThai"));
                 ds.add(s);
             }
@@ -40,9 +41,10 @@ public class SanPhamDAO {
                 SanPham s = new SanPham(
                         rs.getString("maSanPham"),
                         rs.getString("tenSanPham"),
-                        rs.getString("maThuongHieu"),
                         rs.getString("maLoaiGiay"),
-                        rs.getString("moTa"),
+                        rs.getString("maThuongHieu"),
+                        rs.getDouble("giaBan"),
+                        rs.getInt("soLuongTon"),
                         rs.getString("trangThai"));
                 ds.add(s);
             }
@@ -63,9 +65,10 @@ public class SanPhamDAO {
                 SanPham s = new SanPham(
                         rs.getString("maSanPham"),
                         rs.getString("tenSanPham"),
-                        rs.getString("maThuongHieu"),
                         rs.getString("maLoaiGiay"),
-                        rs.getString("moTa"),
+                        rs.getString("maThuongHieu"),
+                        rs.getDouble("giaBan"),
+                        rs.getInt("soLuongTon"),
                         rs.getString("trangThai"));
                 ds.add(s);
             }
@@ -86,9 +89,10 @@ public class SanPhamDAO {
                 SanPham s = new SanPham(
                         rs.getString("maSanPham"),
                         rs.getString("tenSanPham"),
-                        rs.getString("maThuongHieu"),
                         rs.getString("maLoaiGiay"),
-                        rs.getString("moTa"),
+                        rs.getString("maThuongHieu"),
+                        rs.getDouble("giaBan"),
+                        rs.getInt("soLuongTon"),
                         rs.getString("trangThai"));
                 ds.add(s);
             }
@@ -108,9 +112,10 @@ public class SanPhamDAO {
                 return new SanPham(
                         rs.getString("maSanPham"),
                         rs.getString("tenSanPham"),
-                        rs.getString("maThuongHieu"),
                         rs.getString("maLoaiGiay"),
-                        rs.getString("moTa"),
+                        rs.getString("maThuongHieu"),
+                        rs.getDouble("giaBan"),
+                        rs.getInt("soLuongTon"),
                         rs.getString("trangThai"));
             }
         } catch (SQLException e) {
@@ -133,9 +138,10 @@ public class SanPhamDAO {
                 SanPham s = new SanPham(
                         rs.getString("maSanPham"),
                         rs.getString("tenSanPham"),
-                        rs.getString("maThuongHieu"),
                         rs.getString("maLoaiGiay"),
-                        rs.getString("moTa"),
+                        rs.getString("maThuongHieu"),
+                        rs.getDouble("giaBan"),
+                        rs.getInt("soLuongTon"),
                         rs.getString("trangThai"));
                 ds.add(s);
             }
@@ -146,15 +152,16 @@ public class SanPhamDAO {
     }
 
     public boolean insert(SanPham s) {
-        String sql = "INSERT INTO SanPham(maSanPham,tenSanPham,namXuatBan,giaBan,soLuongTon,maTacGia,maTheLoai,maNXB,trangThai) VALUES(?,?,?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO SanPham(maSanPham,tenSanPham,maLoaiGiay,maThuongHieu,giaBan,soLuongTon,trangThai) VALUES(?,?,?,?,?,?,?)";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, s.getMaSanPham());
             ps.setString(2, s.getTenSanPham());
-            ps.setString(3, s.getMaThuongHieu());
-            ps.setString(4, s.getMaLoaiGiay());
-            ps.setString(5, s.getMoTa());
-            ps.setString(6, s.getTrangThai());
+            ps.setString(3, s.getMaLoaiGiay());
+            ps.setString(4, s.getMaThuongHieu());
+            ps.setDouble(5, s.getGiaBan());
+            ps.setInt(6, s.getSoLuongTon());
+            ps.setString(7, s.getTrangThai());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -163,16 +170,17 @@ public class SanPhamDAO {
     }
 
     public boolean update(SanPham s) {
-        String sql = "UPDATE SanPham SET tenSanPham=?,namXuatBan=?,giaBan=?,soLuongTon=?,maTacGia=?,maTheLoai=?,maNXB=?,trangThai=? WHERE maSanPham=?";
+        String sql = "UPDATE SanPham SET tenSanPham=?,maLoaiGiay=?,maThuongHieu=?,giaBan=?,soLuongTon=?,trangThai=? WHERE maSanPham=?";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, s.getTenSanPham());
-            ps.setString(2, s.getMaThuongHieu());
-            ps.setString(3, s.getMaLoaiGiay());
-            ps.setString(4, s.getMoTa());
-            ps.setString(5, s.getTrangThai());
-            ps.setString(6, s.getMaSanPham());
+            ps.setString(2, s.getMaLoaiGiay());
+            ps.setString(3, s.getMaThuongHieu());
+            ps.setDouble(4, s.getGiaBan());
+            ps.setInt(5, s.getSoLuongTon());
+            ps.setString(6, s.getTrangThai());
+            ps.setString(7, s.getMaSanPham());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
