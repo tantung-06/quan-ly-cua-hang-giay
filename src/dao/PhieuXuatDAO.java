@@ -130,7 +130,7 @@ public class PhieuXuatDAO {
     }
 
     public boolean insert(PhieuXuat px) {
-        String sql = "INSERT INTO PhieuXuat(maPhieuXuat,ngayLap,maNhanVien,maKhachHang,maKhuyenMai,phuongThucThanhToan,tongTien,trangThai) VALUES(?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO PhieuXuat(maPhieuXuat,ngayLap,maNhanVien,maKhachHang,maKhuyenMai,phuongThucThanhToan,tongTien,trangThai) VALUES(?,?,?,?,?,?,?,?)";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, px.getMaPhieuXuat());
