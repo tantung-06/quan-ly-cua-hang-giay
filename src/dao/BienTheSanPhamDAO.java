@@ -38,7 +38,7 @@ public class BienTheSanPhamDAO {
             ps.setString(1, maBienThe);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    BienTheSanPham btsp = new BienTheSanPham(
+                    return new BienTheSanPham(
                         rs.getString("maBienThe"),
                         rs.getString("maSanPham"),
                         rs.getString("maMau"),
