@@ -122,6 +122,7 @@ public final class Login extends JFrame {
         loginButton.setPreferredSize(new Dimension(340, 48));
         loginButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
         loginButton.addActionListener(e -> authenticate());
+        password.addActionListener(e -> loginButton.doClick());
 
         form.add(title);
         form.add(subtitle);

@@ -7,15 +7,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 import config.DatabaseConnection;
-import dto.ChiTietPhieuXuat;
+import dto.ChiTietHoaDon;
 
-public class ChiTietPhieuXuatDAO {
-    public ArrayList<ChiTietPhieuXuat> getByPhieuXuat(String maPhieuXuat) {
-        ArrayList<ChiTietPhieuXuat> ds = new ArrayList<>();
-        String sql = "SELECT * FROM ChiTietPhieuXuat WHERE maPhieuXuat=?";
+public class ChiTietHoaDonDAO {
+    public ArrayList<ChiTietHoaDon> getByHoaDon(String maHoaDon) {
+        ArrayList<ChiTietHoaDon> ds = new ArrayList<>();
+        String sql = "SELECT * FROM ChiTietHoaDon WHERE maHoaDon=?";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maPhieuXuat);
+            ps.setString(1, maHoaDon);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     ds.add(mapRow(rs));
@@ -27,11 +27,11 @@ public class ChiTietPhieuXuatDAO {
         return ds;
     }
 
-    public ChiTietPhieuXuat getById(String maPhieuXuat, String maSanPham) {
-        String sql = "SELECT * FROM ChiTietPhieuXuat WHERE maPhieuXuat=? AND maSanPham=?";
+    public ChiTietHoaDon getById(String maHoaDon, String maSanPham) {
+        String sql = "SELECT * FROM ChiTietHoaDon WHERE maHoaDon=? AND maSanPham=?";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maPhieuXuat);
+            ps.setString(1, maHoaDon);
             ps.setString(2, maSanPham);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -44,15 +44,15 @@ public class ChiTietPhieuXuatDAO {
         return null;
     }
 
-    public boolean insert(ChiTietPhieuXuat ctpx) {
-        String sql = "INSERT INTO ChiTietPhieuXuat(maPhieuXuat,maSanPham,soLuong,donGia,thanhTien) VALUES(?,?,?,?,?)";
+    public boolean insert(ChiTietHoaDon cthd) {
+        String sql = "INSERT INTO ChiTietHoaDon(maHoaDon,maSanPham,soLuong,donGia,thanhTien) VALUES(?,?,?,?,?)";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, ctpx.getMaPhieuXuat());
-            ps.setString(2, ctpx.getMaSanPham());
-            ps.setInt(3, ctpx.getSoLuong());
-            ps.setDouble(4, ctpx.getDonGia());
-            ps.setDouble(5, ctpx.getThanhTien());
+            ps.setString(1, cthd.getMaHoaDon());
+            ps.setString(2, cthd.getMaSanPham());
+            ps.setInt(3, cthd.getSoLuong());
+            ps.setDouble(4, cthd.getDonGia());
+            ps.setDouble(5, cthd.getThanhTien());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -60,15 +60,15 @@ public class ChiTietPhieuXuatDAO {
         return false;
     }
 
-    public boolean insertBatch(ArrayList<ChiTietPhieuXuat> ds) {
-        String sql = "INSERT INTO ChiTietPhieuXuat(maPhieuXuat,maSanPham,soLuong,donGia,thanhTien) VALUES(?,?,?,?,?)";
+    public boolean insertBatch(ArrayList<ChiTietHoaDon> ds) {
+        String sql = "INSERT INTO ChiTietHoaDon(maHoaDon,maSanPham,soLuong,donGia,thanhTien) VALUES(?,?,?,?,?)";
         try (Connection conn = DatabaseConnection.getConnection()) {
             boolean previousAutoCommit = conn.getAutoCommit();
             try {
                 conn.setAutoCommit(false);
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    for (ChiTietPhieuXuat obj : ds) {
-                        ps.setString(1, obj.getMaPhieuXuat());
+                    for (ChiTietHoaDon obj : ds) {
+                        ps.setString(1, obj.getMaHoaDon());
                         ps.setString(2, obj.getMaSanPham());
                         ps.setInt(3, obj.getSoLuong());
                         ps.setDouble(4, obj.getDonGia());
@@ -100,15 +100,15 @@ public class ChiTietPhieuXuatDAO {
         return false;
     }
 
-    public boolean update(ChiTietPhieuXuat ctpx) {
-        String sql = "UPDATE ChiTietPhieuXuat SET soLuong=?,donGia=?,thanhTien=? WHERE maPhieuXuat=? AND maSanPham=?";
+    public boolean update(ChiTietHoaDon cthd) {
+        String sql = "UPDATE ChiTietHoaDon SET soLuong=?,donGia=?,thanhTien=? WHERE maHoaDon=? AND maSanPham=?";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, ctpx.getSoLuong());
-            ps.setDouble(2, ctpx.getDonGia());
-            ps.setDouble(3, ctpx.getThanhTien());
-            ps.setString(4, ctpx.getMaPhieuXuat());
-            ps.setString(5, ctpx.getMaSanPham());
+            ps.setInt(1, cthd.getSoLuong());
+            ps.setDouble(2, cthd.getDonGia());
+            ps.setDouble(3, cthd.getThanhTien());
+            ps.setString(4, cthd.getMaHoaDon());
+            ps.setString(5, cthd.getMaSanPham());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -116,11 +116,11 @@ public class ChiTietPhieuXuatDAO {
         return false;
     }
 
-    public boolean delete(String maPhieuXuat, String maSanPham) {
-        String sql = "DELETE FROM ChiTietPhieuXuat WHERE maPhieuXuat=? AND maSanPham=?";
+    public boolean delete(String maHoaDon, String maSanPham) {
+        String sql = "DELETE FROM ChiTietHoaDon WHERE maHoaDon=? AND maSanPham=?";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maPhieuXuat);
+            ps.setString(1, maHoaDon);
             ps.setString(2, maSanPham);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -129,11 +129,11 @@ public class ChiTietPhieuXuatDAO {
         return false;
     }
 
-    public boolean deleteByPhieuXuat(String maPhieuXuat) {
-        String sql = "DELETE FROM ChiTietPhieuXuat WHERE maPhieuXuat=?";
+    public boolean deleteByHoaDon(String maHoaDon) {
+        String sql = "DELETE FROM ChiTietHoaDon WHERE maHoaDon=?";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maPhieuXuat);
+            ps.setString(1, maHoaDon);
             ps.executeUpdate();
             return true;
         } catch (SQLException e) {
@@ -142,9 +142,9 @@ public class ChiTietPhieuXuatDAO {
         return false;
     }
 
-    private ChiTietPhieuXuat mapRow(ResultSet rs) throws SQLException {
-        return new ChiTietPhieuXuat(
-                rs.getString("maPhieuXuat"),
+    private ChiTietHoaDon mapRow(ResultSet rs) throws SQLException {
+        return new ChiTietHoaDon(
+                rs.getString("maHoaDon"),
                 rs.getString("maSanPham"),
                 rs.getInt("soLuong"),
                 rs.getDouble("donGia"),

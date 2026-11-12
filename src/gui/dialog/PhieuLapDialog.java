@@ -32,13 +32,13 @@ import bus.NhaCungCapBUS;
 import bus.NhanVienBUS;
 import bus.SanPhamBUS;
 import dto.ChiTietPhieuNhap;
-import dto.ChiTietPhieuXuat;
+import dto.ChiTietHoaDon;
 import dto.KhachHang;
 import dto.KhuyenMai;
 import dto.NhaCungCap;
 import dto.NhanVien;
 import dto.PhieuNhap;
-import dto.PhieuXuat;
+import dto.HoaDon;
 import dto.SanPham;
 import gui.UiFormats;
 import gui.UiTheme;
@@ -197,7 +197,7 @@ public final class PhieuLapDialog {
     }
 
     private Draft open(java.awt.Window parent) {
-        JDialog dialog = new JDialog(parent, sale ? "Lập phiếu xuất" : "Lập phiếu nhập",
+        JDialog dialog = new JDialog(parent, sale ? "Lập hóa đơn" : "Lập phiếu nhập",
                 JDialog.ModalityType.APPLICATION_MODAL);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.addWindowListener(new java.awt.event.WindowAdapter() {
@@ -214,7 +214,7 @@ public final class PhieuLapDialog {
 
         JPanel header = new JPanel(new GridLayout(0, 2, 12, 10));
         header.setOpaque(false);
-        addHeaderField(header, sale ? "Mã phiếu xuất" : "Mã phiếu", new JLabel(code));
+        addHeaderField(header, sale ? "Mã hóa đơn" : "Mã phiếu", new JLabel(code));
         addHeaderField(header, sale ? "Nhân viên bán hàng" : "Nhân viên lập phiếu", employeeBox);
         if (sale) {
             addHeaderField(header, "Khách hàng", customerBox);
@@ -268,7 +268,7 @@ public final class PhieuLapDialog {
         details.add(sale ? promotionPanel : totalLabel, BorderLayout.SOUTH);
 
         JButton cancel = new JButton("Đóng");
-        JButton save = new JButton(sale ? "Lập phiếu xuất" : "Lập phiếu nhập");
+        JButton save = new JButton(sale ? "Lập hóa đơn" : "Lập phiếu nhập");
         save.setBackground(UiTheme.BLUE);
         save.setForeground(Color.WHITE);
         save.setFocusPainted(false);
@@ -288,7 +288,7 @@ public final class PhieuLapDialog {
                 return;
             }
             if (lines.getRowCount() == 0) {
-                showError(dialog, sale ? "Vui lòng thêm ít nhất một sản phẩm vào phiếu xuất."
+                showError(dialog, sale ? "Vui lòng thêm ít nhất một sản phẩm vào hóa đơn."
                         : "Vui lòng thêm ít nhất một sản phẩm vào phiếu nhập.");
                 return;
             }
@@ -354,7 +354,7 @@ public final class PhieuLapDialog {
             }
             KhuyenMai promotion = promotionPanel.getKhuyenMai();
             KhachHangChoice customer = (KhachHangChoice) customerBox.getSelectedItem();
-            draft.sale = new PhieuXuat(code, LocalDate.now(), employee.getMaNhanVien(),
+            draft.sale = new HoaDon(code, LocalDate.now(), employee.getMaNhanVien(),
                     customer == null ? null : customer.getMaKhachHang(),
                     promotion == null ? null : promotion.getMaKhuyenMai(),
                     "TIEN_MAT", total, "CHO_XU_LY");
@@ -364,7 +364,7 @@ public final class PhieuLapDialog {
                 String productId = lines.getProductId(i);
                 int count = lines.getQuantity(i);
                 double price = lines.getUnitPrice(i);
-                draft.saleLines.add(new ChiTietPhieuXuat(code, productId, count, price, count * price));
+                draft.saleLines.add(new ChiTietHoaDon(code, productId, count, price, count * price));
             }
         } else {
             NhaCungCap supplier = (NhaCungCap) supplierBox.getSelectedItem();
@@ -413,8 +413,8 @@ public final class PhieuLapDialog {
     public static final class Draft {
         public PhieuNhap purchase;
         public List<ChiTietPhieuNhap> purchaseLines;
-        public PhieuXuat sale;
-        public List<ChiTietPhieuXuat> saleLines;
+        public HoaDon sale;
+        public List<ChiTietHoaDon> saleLines;
     }
 
     private static final class KhachHangChoice {

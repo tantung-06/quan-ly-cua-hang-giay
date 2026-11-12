@@ -21,15 +21,11 @@ public class LichSuDiemDAO {
         this.connections = java.util.Objects.requireNonNull(connections);
     }
 
-    /**
-     * The caller owns the transaction; ledger failure must roll back the whole
-     * sale.
-     */
     public void insert(Connection connection, LichSuDiem entry) throws SQLException {
         String sql = "INSERT INTO LichSuDiem(maKhachHang,maPhieuXuat,loai,soDiem,diemSau) VALUES(?,?,?,?,?)";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, entry.getMaKhachHang());
-            statement.setString(2, entry.getMaPhieuXuat());
+            statement.setString(2, entry.getMaHoaDon());
             statement.setString(3, entry.getLoai());
             statement.setInt(4, entry.getSoDiem());
             statement.setInt(5, entry.getDiemSau());

@@ -1,29 +1,29 @@
 package dto;
 
-public class ChiTietPhieuXuat {
-    private String maPhieuXuat;
+public class ChiTietHoaDon {
+    private String maHoaDon;
     private String maSanPham;
     private int soLuong;
     private double donGia;
     private double thanhTien;
 
-    public ChiTietPhieuXuat() {
+    public ChiTietHoaDon() {
     }
 
-    public ChiTietPhieuXuat(String maPhieuXuat, String maSanPham, int soLuong, double donGia, double thanhTien) {
-        this.maPhieuXuat = maPhieuXuat;
+    public ChiTietHoaDon(String maHoaDon, String maSanPham, int soLuong, double donGia, double thanhTien) {
+        this.maHoaDon = maHoaDon;
         this.maSanPham = maSanPham;
         this.soLuong = soLuong;
         this.donGia = donGia;
         this.thanhTien = thanhTien;
     }
 
-    public String getMaPhieuXuat() {
-        return maPhieuXuat;
+    public String getMaHoaDon() {
+        return maHoaDon;
     }
 
-    public void setMaPhieuXuat(String maPhieuXuat) {
-        this.maPhieuXuat = maPhieuXuat;
+    public void setMaHoaDon(String maHoaDon) {
+        this.maHoaDon = maHoaDon;
     }
 
     public String getMaSanPham() {

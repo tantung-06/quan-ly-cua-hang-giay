@@ -11,7 +11,7 @@ import dao.KhachHangDAO;
 import dao.LichSuDiemDAO;
 import dto.KhachHang;
 import dto.LichSuDiem;
-import dto.PhieuXuat;
+import dto.HoaDon;
 import dto.SoDuDiem;
 
 public class DiemTichLuyBUS {
@@ -65,7 +65,7 @@ public class DiemTichLuyBUS {
         return history.getByKhachHang(customerId.trim());
     }
 
-    public void thanhToan(Connection connection, PhieuXuat sale) throws SQLException {
+    public void thanhToan(Connection connection, HoaDon sale) throws SQLException {
         if (sale.isDiemDaXuLy()) {
             throw new IllegalArgumentException("Điểm của phiếu xuất đã được xử lý.");
         }
@@ -93,13 +93,13 @@ public class DiemTichLuyBUS {
         sale.setDiemDaXuLy(true);
     }
 
-    private SoDuDiem apply(Connection connection, PhieuXuat sale, SoDuDiem balance,
+    private SoDuDiem apply(Connection connection, HoaDon sale, SoDuDiem balance,
             String type, int change) throws SQLException {
         if (change == 0) {
             return balance;
         }
         SoDuDiem next = bienDong(balance, change);
-        history.insert(connection, new LichSuDiem(0, sale.getMaKhachHang(), sale.getMaPhieuXuat(), type,
+        history.insert(connection, new LichSuDiem(0, sale.getMaKhachHang(), sale.getMaHoaDon(), type,
                 Math.abs(change), next.getDiemHienCo(), null));
         return next;
     }

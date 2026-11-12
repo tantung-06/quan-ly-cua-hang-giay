@@ -131,7 +131,7 @@ public final class MainFrame extends JFrame {
                 { "Sản phẩm", "product" },
                 { "Thuộc tính", "attribute" },
                 { "Phiếu nhập", "purchase" },
-                { "Phiếu xuất", "sale" },
+                { "Hóa đơn", "sale" },
                 { "Nhà cung cấp", "supplier" },
                 { "Khách hàng", "customer" },
                 { "Nhân viên", "employee" },

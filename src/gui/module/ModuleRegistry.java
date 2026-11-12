@@ -17,12 +17,12 @@ import bus.NhaCungCapBUS;
 import bus.NhanVienBUS;
 import bus.NhomQuyenBUS;
 import bus.PhieuNhapBUS;
-import bus.PhieuXuatBUS;
+import bus.HoaDonBUS;
 import bus.SanPhamBUS;
 import bus.TaiKhoanBUS;
 import bus.ThuongHieuBUS;
 import dto.ChiTietPhieuNhap;
-import dto.ChiTietPhieuXuat;
+import dto.ChiTietHoaDon;
 import dto.KhachHang;
 import dto.KhuyenMai;
 import dto.LichSuDiem;
@@ -31,7 +31,7 @@ import dto.NhaCungCap;
 import dto.NhanVien;
 import dto.NhomQuyen;
 import dto.PhieuNhap;
-import dto.PhieuXuat;
+import dto.HoaDon;
 import dto.SanPham;
 import dto.TaiKhoan;
 import dto.ThuongHieu;
@@ -44,7 +44,7 @@ import gui.dialog.NhomQuyenDialog;
 import gui.dialog.PhieuChiTietDialog;
 import gui.dialog.PhieuLapDialog;
 import gui.dialog.PhieuNhapDialog;
-import gui.dialog.PhieuXuatDialog;
+import gui.dialog.HoaDonDialog;
 import gui.dialog.SanPhamDialog;
 import gui.dialog.TaiKhoanDialog;
 import gui.dialog.ThuocTinhDialog;
@@ -94,14 +94,14 @@ public final class ModuleRegistry {
                             return new Object[] { item.getMaPhieuNhap(), item.getNgayNhap(), item.getMaNhanVien(),
                                     item.getMaNCC(), item.getTongTien(), item.getTrangThai() };
                         }));
-        result.put("Phiếu xuất", new ModuleDefinition("Quản lý phiếu xuất",
-                "Theo dõi phiếu xuất bán hàng và trạng thái xử lý.",
-                new String[] { "Mã phiếu xuất", "Ngày lập", "Mã nhân viên", "Mã khách hàng", "Thanh toán", "Tổng tiền",
+        result.put("Hóa đơn", new ModuleDefinition("Quản lý hóa đơn",
+                "Theo dõi hóa đơn bán hàng và trạng thái xử lý.",
+                new String[] { "Mã hóa đơn", "Ngày lập", "Mã nhân viên", "Mã khách hàng", "Thanh toán", "Tổng tiền",
                         "Trạng thái" },
-                () -> new PhieuXuatBUS().getAll(),
+                () -> new HoaDonBUS().getAll(),
                 value -> {
-                    PhieuXuat item = (PhieuXuat) value;
-                    return new Object[] { item.getMaPhieuXuat(), item.getNgayLap(), item.getMaNhanVien(),
+                    HoaDon item = (HoaDon) value;
+                    return new Object[] { item.getMaHoaDon(), item.getNgayLap(), item.getMaNhanVien(),
                             item.getMaKhachHang(), item.getPhuongThucThanhToan(), item.getTongTien(),
                             item.getTrangThai() };
                 }));
@@ -338,8 +338,8 @@ public final class ModuleRegistry {
                 return "CHO_XU_LY".equals(((PhieuNhap) value).getTrangThai());
             }
         };
-        modules.get("Phiếu xuất").editor = new RecordEditor() {
-            private final PhieuXuatBUS bus = new PhieuXuatBUS();
+        modules.get("Hóa đơn").editor = new RecordEditor() {
+            private final HoaDonBUS bus = new HoaDonBUS();
 
             @Override
             public Object show(Component parent, Object record) {
@@ -347,18 +347,18 @@ public final class ModuleRegistry {
                     NhanVien employee;
                     String code;
                     employee = new NhanVienBUS().getByTaiKhoan(account.getMaTaiKhoan());
-                    code = bus.generateMaPhieuXuat();
+                    code = bus.generateMaHoaDon();
                     PhieuLapDialog.Draft draft = PhieuLapDialog.show(
                             owner, true, code,
                             employee == null ? null : employee.getMaNhanVien());
                     return draft;
                 }
-                PhieuXuat item = (PhieuXuat) record;
-                String[] values = { item.getMaPhieuXuat(), item.getNgayLap().toString(),
+                HoaDon item = (HoaDon) record;
+                String[] values = { item.getMaHoaDon(), item.getNgayLap().toString(),
                         item.getMaNhanVien(), item.getMaKhachHang() == null ? "Khách lẻ" : item.getMaKhachHang(),
                         item.getPhuongThucThanhToan(), Double.toString(item.getTongTien()), item.getTrangThai() };
-                String[] input = new PhieuXuatDialog(values).show(parent, "Cập nhật trạng thái phiếu xuất");
-                return input == null ? null : new Object[] { item.getMaPhieuXuat(), input[6] };
+                String[] input = new HoaDonDialog(values).show(parent, "Cập nhật trạng thái hóa đơn");
+                return input == null ? null : new Object[] { item.getMaHoaDon(), input[6] };
             }
 
             @Override
@@ -378,21 +378,21 @@ public final class ModuleRegistry {
 
             @Override
             public boolean cancel(Object value) {
-                return bus.huyPhieu(((PhieuXuat) value).getMaPhieuXuat());
+                return bus.huyPhieu(((HoaDon) value).getMaHoaDon());
             }
 
             @Override
             public boolean complete(Object value) {
-                return bus.hoanTatXuat(((PhieuXuat) value).getMaPhieuXuat());
+                return bus.hoanTatXuat(((HoaDon) value).getMaHoaDon());
             }
 
             @Override
             public Object[][] loadViewRows(Object record) {
-                ArrayList<ChiTietPhieuXuat> details = bus.getChiTietByPhieuXuat(
-                        ((PhieuXuat) record).getMaPhieuXuat());
+                ArrayList<ChiTietHoaDon> details = bus.getChiTietByHoaDon(
+                        ((HoaDon) record).getMaHoaDon());
                 Object[][] rows = new Object[details.size()][4];
                 for (int i = 0; i < details.size(); i++) {
-                    ChiTietPhieuXuat detail = details.get(i);
+                    ChiTietHoaDon detail = details.get(i);
                     rows[i] = new Object[] { detail.getMaSanPham(), detail.getSoLuong(),
                             detail.getDonGia(), detail.getThanhTien() };
                 }
@@ -401,14 +401,14 @@ public final class ModuleRegistry {
 
             @Override
             public void showView(Component parent, Object record, Object[][] rows) {
-                PhieuXuat item = (PhieuXuat) record;
+                HoaDon item = (HoaDon) record;
                 double subtotal = 0;
                 for (Object[] row : rows) {
                     subtotal += ((Number) row[3]).doubleValue();
                 }
-                PhieuChiTietDialog.show(parent, "Chi tiết phiếu xuất " + item.getMaPhieuXuat(),
+                PhieuChiTietDialog.show(parent, "Chi tiết hóa đơn " + item.getMaHoaDon(),
                         new String[][] {
-                                { "Mã phiếu xuất", item.getMaPhieuXuat() },
+                                { "Mã hóa đơn", item.getMaHoaDon() },
                                 { "Ngày lập", item.getNgayLap().toString() },
                                 { "Mã nhân viên", item.getMaNhanVien() },
                                 { "Mã khách hàng", item.getMaKhachHang() == null
@@ -436,22 +436,22 @@ public final class ModuleRegistry {
 
             @Override
             public String createLabel() {
-                return "Lập phiếu xuất";
+                return "Lập hóa đơn";
             }
 
             @Override
             public String viewLabel() {
-                return "Xem phiếu xuất";
+                return "Xem hóa đơn";
             }
 
             @Override
             public String cancelLabel() {
-                return "Hủy phiếu xuất";
+                return "Hủy hóa đơn";
             }
 
             @Override
             public String cancelConfirmation(Object value) {
-                return "Hủy phiếu xuất đang chờ? Phiếu chưa hoàn tất nên số điểm khách hàng chưa thay đổi.";
+                return "Hủy hóa đơn đang chờ? Phiếu chưa hoàn tất nên số điểm khách hàng chưa thay đổi.";
             }
 
             @Override
@@ -476,13 +476,13 @@ public final class ModuleRegistry {
 
             @Override
             public boolean canCancel(Object value) {
-                PhieuXuat sale = (PhieuXuat) value;
+                HoaDon sale = (HoaDon) value;
                 return "CHO_XU_LY".equals(sale.getTrangThai()) && !sale.isDiemDaXuLy();
             }
 
             @Override
             public boolean canComplete(Object value) {
-                return "CHO_XU_LY".equals(((PhieuXuat) value).getTrangThai());
+                return "CHO_XU_LY".equals(((HoaDon) value).getTrangThai());
             }
         };
         modules.get("Sản phẩm").editor = new RecordEditor() {
@@ -590,7 +590,7 @@ public final class ModuleRegistry {
                     boolean debit = "TRU".equals(entry.getLoai()) || "THU_HOI".equals(entry.getLoai());
                     rows[i] = new Object[] { entry.getMaLichSu(), entry.getThoiGian().format(
                             java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
-                            entry.getMaPhieuXuat(),
+                            entry.getMaHoaDon(),
                             loyaltyTypeName(entry.getLoai()), (debit ? "-" : "+") + entry.getSoDiem(),
                             entry.getDiemSau() };
                 }
@@ -605,7 +605,7 @@ public final class ModuleRegistry {
                                 { "Khách hàng", customer.getHo() + " " + customer.getTen() },
                                 { "Điểm hiện có", Integer.toString(customer.getDiemTichLuy()) },
                                 { "Quy đổi", "10.000 VNĐ thực trả = 1 điểm; 1 điểm dùng = 1.000 VNĐ" }
-                        }, new String[] { "Mã", "Thời gian", "Phiếu xuất", "Loại", "Biến động", "Điểm còn" }, rows);
+                        }, new String[] { "Mã", "Thời gian", "Hóa đơn", "Loại", "Biến động", "Điểm còn" }, rows);
             }
         };
         modules.get("Nhà cung cấp").editor = new RecordEditor() {

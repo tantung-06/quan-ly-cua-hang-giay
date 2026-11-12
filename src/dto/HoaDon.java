@@ -2,8 +2,8 @@ package dto;
 
 import java.time.LocalDate;
 
-public class PhieuXuat {
-    private String maPhieuXuat;
+public class HoaDon {
+    private String maHoaDon;
     private LocalDate ngayLap;
     private String maNhanVien;
     private String maKhachHang;
@@ -15,12 +15,12 @@ public class PhieuXuat {
     private int diemDuocCong;
     private boolean diemDaXuLy;
 
-    public PhieuXuat() {
+    public HoaDon() {
     }
 
-    public PhieuXuat(String maPhieuXuat, LocalDate ngayLap, String maNhanVien, String maKhachHang, String maKhuyenMai,
+    public HoaDon(String maHoaDon, LocalDate ngayLap, String maNhanVien, String maKhachHang, String maKhuyenMai,
             String phuongThucThanhToan, double tongTien, String trangThai) {
-        this.maPhieuXuat = maPhieuXuat;
+        this.maHoaDon = maHoaDon;
         this.ngayLap = ngayLap;
         this.maNhanVien = maNhanVien;
         this.maKhachHang = maKhachHang;
@@ -30,12 +30,12 @@ public class PhieuXuat {
         this.trangThai = trangThai;
     }
 
-    public String getMaPhieuXuat() {
-        return maPhieuXuat;
+    public String getMaHoaDon() {
+        return maHoaDon;
     }
 
-    public void setMaPhieuXuat(String maPhieuXuat) {
-        this.maPhieuXuat = maPhieuXuat;
+    public void setMaHoaDon(String maHoaDon) {
+        this.maHoaDon = maHoaDon;
     }
 
     public LocalDate getNgayLap() {

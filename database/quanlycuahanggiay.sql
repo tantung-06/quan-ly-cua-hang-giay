@@ -137,8 +137,8 @@ CREATE TABLE ChiTietPhieuNhap (
     CONSTRAINT CK_CTPN_ThanhTien CHECK (thanhTien >= 0)
 ) ENGINE=InnoDB;
 
-CREATE TABLE PhieuXuat (
-    maPhieuXuat VARCHAR(20) NOT NULL,
+CREATE TABLE HoaDon (
+    maHoaDon VARCHAR(20) NOT NULL,
     ngayLap DATE NOT NULL,
     maNhanVien VARCHAR(20) NOT NULL,
     maKhachHang VARCHAR(20) NULL,
@@ -151,58 +151,58 @@ CREATE TABLE PhieuXuat (
     diemDaXuLy BOOLEAN NOT NULL DEFAULT FALSE,
     trangThai VARCHAR(20) NOT NULL DEFAULT 'CHO_XU_LY'
         CHECK (trangThai IN ('CHO_XU_LY', 'DA_XUAT', 'HUY')),
-    CONSTRAINT PK_PhieuXuat PRIMARY KEY (maPhieuXuat),
-    CONSTRAINT CK_PhieuXuat_Diem CHECK (diemSuDung >= 0 AND diemDuocCong >= 0
+    CONSTRAINT PK_HoaDon PRIMARY KEY (maHoaDon),
+    CONSTRAINT CK_HoaDon_Diem CHECK (diemSuDung >= 0 AND diemDuocCong >= 0
         AND (maKhachHang IS NOT NULL OR (diemSuDung = 0 AND diemDuocCong = 0))),
-    CONSTRAINT CK_PhieuXuat_ThucTra CHECK (tongTien >= 0),
-    CONSTRAINT FK_PhieuXuat_NhanVien FOREIGN KEY (maNhanVien)
+    CONSTRAINT CK_HoaDon_ThucTra CHECK (tongTien >= 0),
+    CONSTRAINT FK_HoaDon_NhanVien FOREIGN KEY (maNhanVien)
         REFERENCES NhanVien(maNhanVien) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT FK_PhieuXuat_KhachHang FOREIGN KEY (maKhachHang)
+    CONSTRAINT FK_HoaDon_KhachHang FOREIGN KEY (maKhachHang)
         REFERENCES KhachHang(maKhachHang) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT FK_PhieuXuat_KhuyenMai FOREIGN KEY (maKhuyenMai)
+    CONSTRAINT FK_HoaDon_KhuyenMai FOREIGN KEY (maKhuyenMai)
         REFERENCES KhuyenMai(maKhuyenMai) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB;
 
-CREATE TABLE ChiTietPhieuXuat (
-    maPhieuXuat VARCHAR(20) NOT NULL,
+CREATE TABLE ChiTietHoaDon (
+    maHoaDon VARCHAR(20) NOT NULL,
     maSanPham VARCHAR(20) NOT NULL,
     soLuong INT NOT NULL,
     donGia DECIMAL(12,2) NOT NULL,
     thanhTien DECIMAL(14,2) NOT NULL,
-    CONSTRAINT PK_ChiTietPhieuXuat PRIMARY KEY (maPhieuXuat, maSanPham),
-    CONSTRAINT FK_CTPX_PhieuXuat FOREIGN KEY (maPhieuXuat)
-        REFERENCES PhieuXuat(maPhieuXuat) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT FK_CTPX_SanPham FOREIGN KEY (maSanPham)
+    CONSTRAINT PK_ChiTietHoaDon PRIMARY KEY (maHoaDon, maSanPham),
+    CONSTRAINT FK_CTHD_HoaDon FOREIGN KEY (maHoaDon)
+        REFERENCES HoaDon(maHoaDon) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT FK_CTHD_SanPham FOREIGN KEY (maSanPham)
         REFERENCES SanPham(maSanPham) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT CK_CTPX_SoLuong CHECK (soLuong > 0),
-    CONSTRAINT CK_CTPX_DonGia CHECK (donGia >= 0),
-    CONSTRAINT CK_CTPX_ThanhTien CHECK (thanhTien >= 0)
+    CONSTRAINT CK_CTHD_SoLuong CHECK (soLuong > 0),
+    CONSTRAINT CK_CTHD_DonGia CHECK (donGia >= 0),
+    CONSTRAINT CK_CTHD_ThanhTien CHECK (thanhTien >= 0)
 ) ENGINE=InnoDB;
 
 CREATE TABLE LichSuDiem (
     maLichSu BIGINT NOT NULL AUTO_INCREMENT,
     maKhachHang VARCHAR(20) NOT NULL,
-    maPhieuXuat VARCHAR(20) NULL,
+    maHoaDon VARCHAR(20) NULL,
     loai VARCHAR(20) NOT NULL,
     soDiem INT NOT NULL,
     diemSau INT NOT NULL,
     thoiGian TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     CONSTRAINT PK_LichSuDiem PRIMARY KEY (maLichSu),
-    CONSTRAINT UQ_LichSuDiem_PhieuLoai UNIQUE (maPhieuXuat, loai),
+    CONSTRAINT UQ_LichSuDiem_PhieuLoai UNIQUE (maHoaDon, loai),
     CONSTRAINT FK_LichSuDiem_KhachHang FOREIGN KEY (maKhachHang) REFERENCES KhachHang(maKhachHang),
-    CONSTRAINT FK_LichSuDiem_PhieuXuat FOREIGN KEY (maPhieuXuat) REFERENCES PhieuXuat(maPhieuXuat),
+    CONSTRAINT FK_LichSuDiem_HoaDon FOREIGN KEY (maHoaDon) REFERENCES HoaDon(maHoaDon),
     CONSTRAINT CK_LichSuDiem_Loai CHECK (loai IN ('KHOI_TAO','CONG','TRU','HOAN','THU_HOI')),
     CONSTRAINT CK_LichSuDiem_SoDiem CHECK (soDiem >= 0 AND diemSau >= 0),
-    CONSTRAINT CK_LichSuDiem_Phieu CHECK ((loai = 'KHOI_TAO' AND maPhieuXuat IS NULL)
-        OR (loai <> 'KHOI_TAO' AND maPhieuXuat IS NOT NULL)),
+    CONSTRAINT CK_LichSuDiem_Phieu CHECK ((loai = 'KHOI_TAO' AND maHoaDon IS NULL)
+        OR (loai <> 'KHOI_TAO' AND maHoaDon IS NOT NULL)),
     INDEX IDX_LichSuDiem_KhachHang (maKhachHang, maLichSu)
 ) ENGINE=InnoDB;
 
 CREATE INDEX IDX_SanPham_TrangThai ON SanPham(trangThai);
-CREATE INDEX IDX_PhieuXuat_NgayLap ON PhieuXuat(ngayLap);
+CREATE INDEX IDX_HoaDon_NgayLap ON HoaDon(ngayLap);
 CREATE INDEX IDX_PhieuNhap_NgayNhap ON PhieuNhap(ngayNhap);
 CREATE INDEX IDX_KhachHang_SDT ON KhachHang(soDienThoai);
-CREATE INDEX IDX_PhieuXuat_KhachHang ON PhieuXuat(maKhachHang);
+CREATE INDEX IDX_HoaDon_KhachHang ON HoaDon(maKhachHang);
 
 -- =====================================================
 -- 1. NHOM QUYEN
@@ -343,38 +343,38 @@ VALUES
 ('PN005', 'SP008', 2, 1500000, 3000000);
 
 -- =====================================================
--- 12. PHIEU XUAT
+-- 12. HOA DON
 -- tongTien = tong thanhTien chi tiet trong du lieu demo.
 -- =====================================================
-INSERT INTO PhieuXuat
-(maPhieuXuat, ngayLap, maNhanVien, maKhachHang, maKhuyenMai, phuongThucThanhToan, tongTien, trangThai)
+INSERT INTO HoaDon
+(maHoaDon, ngayLap, maNhanVien, maKhachHang, maKhuyenMai, phuongThucThanhToan, tongTien, trangThai)
 VALUES
-('PX001', '2026-10-12', 'NV003', 'KH001', 'KM001', 'TIEN_MAT', 2500000, 'DA_XUAT'),
-('PX002', '2026-10-13', 'NV003', 'KH002', 'KM002', 'CHUYEN_KHOAN', 5000000, 'DA_XUAT'),
-('PX003', '2026-10-15', 'NV004', 'KH004', 'KM003', 'THE', 3500000, 'DA_XUAT'),
-('PX004', '2026-10-18', 'NV003', 'KH003', NULL, 'TIEN_MAT', 3300000, 'DA_XUAT'),
-('PX005', '2026-10-20', 'NV004', NULL, NULL, 'CHUYEN_KHOAN', 1800000, 'DA_XUAT'),
-('PX006', '2026-10-22', 'NV003', 'KH005', 'KM001', 'TIEN_MAT', 2800000, 'CHO_XU_LY'),
-('PX007', '2026-10-22', 'NV004', 'KH006', NULL, 'TIEN_MAT', 0, 'HUY');
+('HD001', '2026-10-12', 'NV003', 'KH001', 'KM001', 'TIEN_MAT', 2500000, 'DA_XUAT'),
+('HD002', '2026-10-13', 'NV003', 'KH002', 'KM002', 'CHUYEN_KHOAN', 5000000, 'DA_XUAT'),
+('HD003', '2026-10-15', 'NV004', 'KH004', 'KM003', 'THE', 3500000, 'DA_XUAT'),
+('HD004', '2026-10-18', 'NV003', 'KH003', NULL, 'TIEN_MAT', 3300000, 'DA_XUAT'),
+('HD005', '2026-10-20', 'NV004', NULL, NULL, 'CHUYEN_KHOAN', 1800000, 'DA_XUAT'),
+('HD006', '2026-10-22', 'NV003', 'KH005', 'KM001', 'TIEN_MAT', 2800000, 'CHO_XU_LY'),
+('HD007', '2026-10-22', 'NV004', 'KH006', NULL, 'TIEN_MAT', 0, 'HUY');
 
 -- =====================================================
--- 13. CHI TIET PHIEU XUAT
+-- 13. CHI TIET HOA DON
 -- thanhTien = soLuong * donGia
 -- =====================================================
-INSERT INTO ChiTietPhieuXuat
-(maPhieuXuat, maSanPham, soLuong, donGia, thanhTien)
+INSERT INTO ChiTietHoaDon
+(maHoaDon, maSanPham, soLuong, donGia, thanhTien)
 VALUES
-('PX001', 'SP001', 1, 2500000, 2500000),
-('PX002', 'SP002', 1, 3200000, 3200000),
-('PX002', 'SP005', 1, 1800000, 1800000),
-('PX003', 'SP003', 1, 3500000, 3500000),
-('PX004', 'SP004', 1, 2200000, 2200000),
-('PX004', 'SP006', 1, 1100000, 1100000),
-('PX005', 'SP006', 1, 1800000, 1800000),
-('PX006', 'SP007', 1, 2800000, 2800000);
+('HD001', 'SP001', 1, 2500000, 2500000),
+('HD002', 'SP002', 1, 3200000, 3200000),
+('HD002', 'SP005', 1, 1800000, 1800000),
+('HD003', 'SP003', 1, 3500000, 3500000),
+('HD004', 'SP004', 1, 2200000, 2200000),
+('HD004', 'SP006', 1, 1100000, 1100000),
+('HD005', 'SP006', 1, 1800000, 1800000),
+('HD006', 'SP007', 1, 2800000, 2800000);
 
 
 -- Preserve demo customer balances as the opening loyalty ledger.
-INSERT INTO LichSuDiem(maKhachHang,maPhieuXuat,loai,soDiem,diemSau)
+INSERT INTO LichSuDiem(maKhachHang,maHoaDon,loai,soDiem,diemSau)
 SELECT k.maKhachHang,NULL,'KHOI_TAO',k.diemTichLuy,k.diemTichLuy FROM KhachHang k
 WHERE NOT EXISTS (SELECT 1 FROM LichSuDiem h WHERE h.maKhachHang=k.maKhachHang);

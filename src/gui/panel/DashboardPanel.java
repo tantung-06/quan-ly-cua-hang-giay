@@ -28,9 +28,9 @@ import javax.swing.table.DefaultTableModel;
 
 import bus.KhachHangBUS;
 import bus.NhanVienBUS;
-import bus.PhieuXuatBUS;
+import bus.HoaDonBUS;
 import bus.SanPhamBUS;
-import dto.PhieuXuat;
+import dto.HoaDon;
 import dto.SanPham;
 import gui.UiFormats;
 import gui.UiTheme;
@@ -48,7 +48,7 @@ public class DashboardPanel extends JPanel {
     private final JLabel lowStockValue = new JLabel("—");
     private final JLabel salesSummary = new JLabel("Đang tải dữ liệu...");
     private final DefaultTableModel recentModel = new DefaultTableModel(
-            new String[] { "Mã phiếu xuất", "Ngày lập", "Khách hàng", "Tổng tiền", "Trạng thái" }, 0) {
+            new String[] { "Mã hóa đơn", "Ngày lập", "Khách hàng", "Tổng tiền", "Trạng thái" }, 0) {
         private static final long serialVersionUID = 1L;
 
         @Override
@@ -110,7 +110,7 @@ public class DashboardPanel extends JPanel {
         stats.setPreferredSize(new Dimension(0, 120));
         stats.add(new MetricCard("Tổng sản phẩm", productsValue, "Đang có trong danh mục", UiTheme.BLUE));
         stats.add(new MetricCard("Khách hàng", customersValue, "Hồ sơ khách hàng", UiTheme.GREEN));
-        stats.add(new MetricCard("Doanh thu hôm nay", revenueValue, "Từ phiếu xuất đã xuất", UiTheme.PRIMARY));
+        stats.add(new MetricCard("Doanh thu hôm nay", revenueValue, "Từ hóa đơn đã xuất", UiTheme.PRIMARY));
         stats.add(new MetricCard("Sắp hết hàng", lowStockValue, "Sản phẩm còn tối đa 5 đôi", UiTheme.AMBER));
 
         JPanel chartCard = sectionCard("Doanh thu 7 ngày gần nhất", chart);
@@ -149,7 +149,7 @@ public class DashboardPanel extends JPanel {
         JScrollPane recentScroll = new JScrollPane(recentTable);
         recentScroll.setBorder(null);
         recentScroll.getViewport().setBackground(Color.WHITE);
-        JPanel recentCard = sectionCard("Phiếu xuất gần đây", recentScroll);
+        JPanel recentCard = sectionCard("Hóa đơn gần đây", recentScroll);
         recentCard.setPreferredSize(new Dimension(0, 300));
 
         JPanel lower = new JPanel(new GridLayout(1, 2, 14, 0));
@@ -167,13 +167,13 @@ public class DashboardPanel extends JPanel {
         salesSummary.setForeground(UiTheme.MUTED);
         footer.add(salesSummary, BorderLayout.WEST);
         if (!statistics) {
-            JButton seeSales = new JButton("Xem danh sách phiếu xuất  →");
+            JButton seeSales = new JButton("Xem danh sách hóa đơn  →");
             seeSales.setFont(UiTheme.bold(12));
             seeSales.setForeground(UiTheme.PRIMARY);
             seeSales.setContentAreaFilled(false);
             seeSales.setBorderPainted(false);
             seeSales.setFocusPainted(false);
-            seeSales.addActionListener(event -> navigate.accept("Phiếu xuất"));
+            seeSales.addActionListener(event -> navigate.accept("Hóa đơn"));
             footer.add(seeSales, BorderLayout.EAST);
         }
         body.add(footer, BorderLayout.SOUTH);
@@ -191,7 +191,7 @@ public class DashboardPanel extends JPanel {
             @Override
             protected DashboardData doInBackground() {
                 List<SanPham> products = new SanPhamBUS().getAll();
-                List<PhieuXuat> sales = new PhieuXuatBUS().getAll();
+                List<HoaDon> sales = new HoaDonBUS().getAll();
                 int customers = new KhachHangBUS().getAll().size();
                 int employees = new NhanVienBUS().getAll().size();
                 return new DashboardData(products, sales, customers, employees);
@@ -204,7 +204,7 @@ public class DashboardPanel extends JPanel {
                     LocalDate today = LocalDate.now();
                     double todayRevenue = 0;
                     int todayOrders = 0;
-                    for (PhieuXuat sale : data.sales) {
+                    for (HoaDon sale : data.sales) {
                         if (today.equals(sale.getNgayLap()) && "DA_XUAT".equals(sale.getTrangThai())) {
                             todayRevenue += sale.getTongTien();
                             todayOrders++;
@@ -240,11 +240,11 @@ public class DashboardPanel extends JPanel {
         worker.execute();
     }
 
-    private void updateRecentSales(List<PhieuXuat> sales) {
+    private void updateRecentSales(List<HoaDon> sales) {
         recentModel.setRowCount(0);
         for (int index = 0; index < Math.min(6, sales.size()); index++) {
-            PhieuXuat sale = sales.get(index);
-            recentModel.addRow(new Object[] { sale.getMaPhieuXuat(), sale.getNgayLap(),
+            HoaDon sale = sales.get(index);
+            recentModel.addRow(new Object[] { sale.getMaHoaDon(), sale.getNgayLap(),
                     sale.getMaKhachHang() == null ? "Khách lẻ" : sale.getMaKhachHang(),
                     sale.getTongTien(), sale.getTrangThai() });
         }
@@ -289,11 +289,11 @@ public class DashboardPanel extends JPanel {
 
     private static final class DashboardData {
         final List<SanPham> products;
-        final List<PhieuXuat> sales;
+        final List<HoaDon> sales;
         final int customers;
         final int employees;
 
-        DashboardData(List<SanPham> products, List<PhieuXuat> sales, int customers, int employees) {
+        DashboardData(List<SanPham> products, List<HoaDon> sales, int customers, int employees) {
             this.products = products;
             this.sales = sales;
             this.customers = customers;
@@ -309,10 +309,10 @@ public class DashboardPanel extends JPanel {
             setOpaque(false);
         }
 
-        void setSales(List<PhieuXuat> sales) {
+        void setSales(List<HoaDon> sales) {
             LocalDate today = LocalDate.now();
             dailySales = new double[7];
-            for (PhieuXuat sale : sales) {
+            for (HoaDon sale : sales) {
                 if (!"DA_XUAT".equals(sale.getTrangThai()) || sale.getNgayLap() == null) {
                     continue;
                 }

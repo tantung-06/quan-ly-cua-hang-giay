@@ -12,28 +12,28 @@ import java.util.List;
 import bus.DiemTichLuyBUS;
 import config.DatabaseConnection;
 import config.DatabaseConnection.ConnectionFactory;
-import dto.ChiTietPhieuXuat;
-import dto.PhieuXuat;
+import dto.ChiTietHoaDon;
+import dto.HoaDon;
 
-public class PhieuXuatDAO {
+public class HoaDonDAO {
     private final ConnectionFactory connections;
     private final DiemTichLuyBUS loyalty;
 
-    public PhieuXuatDAO() {
+    public HoaDonDAO() {
         this(DatabaseConnection::getConnection, new DiemTichLuyBUS());
     }
 
-    public PhieuXuatDAO(ConnectionFactory connections, DiemTichLuyBUS loyalty) {
+    public HoaDonDAO(ConnectionFactory connections, DiemTichLuyBUS loyalty) {
         this.connections = java.util.Objects.requireNonNull(connections);
         this.loyalty = java.util.Objects.requireNonNull(loyalty);
     }
 
-    private static final String INSERT_SQL = "INSERT INTO PhieuXuat(maPhieuXuat,ngayLap,maNhanVien,maKhachHang,maKhuyenMai,phuongThucThanhToan,tongTien,trangThai,diemSuDung,diemDuocCong,diemDaXuLy) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
-    private static final String INSERT_DETAIL_SQL = "INSERT INTO ChiTietPhieuXuat(maPhieuXuat,maSanPham,soLuong,donGia,thanhTien) VALUES(?,?,?,?,?)";
+    private static final String INSERT_SQL = "INSERT INTO HoaDon(maHoaDon,ngayLap,maNhanVien,maKhachHang,maKhuyenMai,phuongThucThanhToan,tongTien,trangThai,diemSuDung,diemDuocCong,diemDaXuLy) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+    private static final String INSERT_DETAIL_SQL = "INSERT INTO ChiTietHoaDon(maHoaDon,maSanPham,soLuong,donGia,thanhTien) VALUES(?,?,?,?,?)";
 
-    public ArrayList<PhieuXuat> getAll() {
-        ArrayList<PhieuXuat> ds = new ArrayList<>();
-        String sql = "SELECT * FROM PhieuXuat ORDER BY ngayLap DESC";
+    public ArrayList<HoaDon> getAll() {
+        ArrayList<HoaDon> ds = new ArrayList<>();
+        String sql = "SELECT * FROM HoaDon ORDER BY ngayLap DESC";
         try (Connection conn = connections.open();
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
@@ -46,9 +46,9 @@ public class PhieuXuatDAO {
         return ds;
     }
 
-    public ArrayList<PhieuXuat> getByTrangThai(String trangThai) {
-        ArrayList<PhieuXuat> ds = new ArrayList<>();
-        String sql = "SELECT * FROM PhieuXuat WHERE trangThai=? ORDER BY ngayLap DESC";
+    public ArrayList<HoaDon> getByTrangThai(String trangThai) {
+        ArrayList<HoaDon> ds = new ArrayList<>();
+        String sql = "SELECT * FROM HoaDon WHERE trangThai=? ORDER BY ngayLap DESC";
         try (Connection conn = connections.open();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
@@ -63,9 +63,9 @@ public class PhieuXuatDAO {
         return ds;
     }
 
-    public ArrayList<PhieuXuat> getByKhachHang(String maKhachHang) {
-        ArrayList<PhieuXuat> ds = new ArrayList<>();
-        String sql = "SELECT * FROM PhieuXuat WHERE maKhachHang=? ORDER BY ngayLap DESC";
+    public ArrayList<HoaDon> getByKhachHang(String maKhachHang) {
+        ArrayList<HoaDon> ds = new ArrayList<>();
+        String sql = "SELECT * FROM HoaDon WHERE maKhachHang=? ORDER BY ngayLap DESC";
         try (Connection conn = connections.open();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maKhachHang);
@@ -80,9 +80,9 @@ public class PhieuXuatDAO {
         return ds;
     }
 
-    public ArrayList<PhieuXuat> getByNhanVien(String maNhanVien) {
-        ArrayList<PhieuXuat> ds = new ArrayList<>();
-        String sql = "SELECT * FROM PhieuXuat WHERE maNhanVien=? ORDER BY ngayLap DESC";
+    public ArrayList<HoaDon> getByNhanVien(String maNhanVien) {
+        ArrayList<HoaDon> ds = new ArrayList<>();
+        String sql = "SELECT * FROM HoaDon WHERE maNhanVien=? ORDER BY ngayLap DESC";
         try (Connection conn = connections.open();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNhanVien);
@@ -97,11 +97,11 @@ public class PhieuXuatDAO {
         return ds;
     }
 
-    public PhieuXuat getById(String maPhieuXuat) {
-        String sql = "SELECT * FROM PhieuXuat WHERE maPhieuXuat=?";
+    public HoaDon getById(String maHoaDon) {
+        String sql = "SELECT * FROM HoaDon WHERE maHoaDon=?";
         try (Connection conn = connections.open();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maPhieuXuat);
+            ps.setString(1, maHoaDon);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return mapRow(rs);
@@ -113,13 +113,13 @@ public class PhieuXuatDAO {
         return null;
     }
 
-    public boolean insert(PhieuXuat sale) {
+    public boolean insert(HoaDon sale) {
         if (!"CHO_XU_LY".equals(sale.getTrangThai()) || sale.isDiemDaXuLy() || sale.getDiemDuocCong() != 0) {
             return false;
         }
         try (Connection conn = connections.open();
                 PreparedStatement ps = conn.prepareStatement(INSERT_SQL)) {
-            bindPhieuXuat(ps, sale);
+            bindHoaDon(ps, sale);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -127,10 +127,7 @@ public class PhieuXuatDAO {
         return false;
     }
 
-    /**
-     * Save the discount on the header and all merchandise lines in one transaction.
-     */
-    public boolean insertWithDetails(PhieuXuat sale, List<ChiTietPhieuXuat> details) {
+    public boolean insertWithDetails(HoaDon sale, List<ChiTietHoaDon> details) {
         if (!"CHO_XU_LY".equals(sale.getTrangThai()) || sale.isDiemDaXuLy()
                 || sale.getDiemDuocCong() != 0 || sale.getDiemSuDung() < 0 || details == null || details.isEmpty()) {
             return false;
@@ -140,13 +137,13 @@ public class PhieuXuatDAO {
                 conn.setAutoCommit(false);
                 try (PreparedStatement header = conn.prepareStatement(INSERT_SQL);
                         PreparedStatement lines = conn.prepareStatement(INSERT_DETAIL_SQL)) {
-                    bindPhieuXuat(header, sale);
+                    bindHoaDon(header, sale);
                     if (header.executeUpdate() != 1) {
                         conn.rollback();
                         return false;
                     }
-                    for (ChiTietPhieuXuat detail : details) {
-                        lines.setString(1, detail.getMaPhieuXuat());
+                    for (ChiTietHoaDon detail : details) {
+                        lines.setString(1, detail.getMaHoaDon());
                         lines.setString(2, detail.getMaSanPham());
                         lines.setInt(3, detail.getSoLuong());
                         lines.setDouble(4, detail.getDonGia());
@@ -180,8 +177,8 @@ public class PhieuXuatDAO {
         }
     }
 
-    private void bindPhieuXuat(PreparedStatement ps, PhieuXuat sale) throws SQLException {
-        ps.setString(1, sale.getMaPhieuXuat());
+    private void bindHoaDon(PreparedStatement ps, HoaDon sale) throws SQLException {
+        ps.setString(1, sale.getMaHoaDon());
         ps.setDate(2, Date.valueOf(sale.getNgayLap()));
         ps.setString(3, sale.getMaNhanVien());
         ps.setString(4, sale.getMaKhachHang());
@@ -194,12 +191,12 @@ public class PhieuXuatDAO {
         ps.setBoolean(11, sale.isDiemDaXuLy());
     }
 
-    public boolean update(PhieuXuat sale) {
+    public boolean update(HoaDon sale) {
         if (!"CHO_XU_LY".equals(sale.getTrangThai()) || sale.getDiemSuDung() != 0
                 || sale.getDiemDuocCong() != 0 || sale.isDiemDaXuLy()) {
             return false;
         }
-        String sql = "UPDATE PhieuXuat SET ngayLap=?,maNhanVien=?,maKhachHang=?,maKhuyenMai=?,phuongThucThanhToan=?,tongTien=?,trangThai=? WHERE maPhieuXuat=? AND trangThai='CHO_XU_LY' AND diemSuDung=0 AND diemDaXuLy=FALSE";
+        String sql = "UPDATE HoaDon SET ngayLap=?,maNhanVien=?,maKhachHang=?,maKhuyenMai=?,phuongThucThanhToan=?,tongTien=?,trangThai=? WHERE maHoaDon=? AND trangThai='CHO_XU_LY' AND diemSuDung=0 AND diemDaXuLy=FALSE";
         try (Connection conn = connections.open();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(sale.getNgayLap()));
@@ -212,7 +209,7 @@ public class PhieuXuatDAO {
             ps.setString(5, sale.getPhuongThucThanhToan());
             ps.setDouble(6, sale.getTongTien());
             ps.setString(7, sale.getTrangThai());
-            ps.setString(8, sale.getMaPhieuXuat());
+            ps.setString(8, sale.getMaHoaDon());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -239,9 +236,9 @@ public class PhieuXuatDAO {
         try (Connection connection = connections.open()) {
             try {
                 connection.setAutoCommit(false);
-                PhieuXuat sale;
+                HoaDon sale;
                 try (PreparedStatement lock = connection.prepareStatement(
-                        "SELECT * FROM PhieuXuat WHERE maPhieuXuat=? FOR UPDATE")) {
+                        "SELECT * FROM HoaDon WHERE maHoaDon=? FOR UPDATE")) {
                     lock.setString(1, id);
                     try (ResultSet rows = lock.executeQuery()) {
                         sale = rows.next() ? mapRow(rows) : null;
@@ -258,8 +255,8 @@ public class PhieuXuatDAO {
                     updateStock(connection, id);
                 }
                 try (PreparedStatement update = connection.prepareStatement(
-                        "UPDATE PhieuXuat SET trangThai=?,diemDuocCong=?,diemDaXuLy=? "
-                                + "WHERE maPhieuXuat=? AND trangThai=?")) {
+                        "UPDATE HoaDon SET trangThai=?,diemDuocCong=?,diemDaXuLy=? "
+                                + "WHERE maHoaDon=? AND trangThai=?")) {
                     update.setString(1, cancel ? "HUY" : "DA_XUAT");
                     update.setInt(2, sale.getDiemDuocCong());
                     update.setBoolean(3, sale.isDiemDaXuLy());
@@ -288,17 +285,13 @@ public class PhieuXuatDAO {
         }
     }
 
-    private void validatePromotionUsage(Connection connection, PhieuXuat sale) throws SQLException {
+    private void validatePromotionUsage(Connection connection, HoaDon sale) throws SQLException {
         if (sale.getMaKhuyenMai() == null) {
             return;
         }
         if (sale.getMaKhachHang() == null || sale.getMaKhachHang().trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng chọn khách hàng trước khi áp dụng khuyến mãi.");
         }
-        // Serialize payments for this customer before the first consistent read in the
-        // transaction.
-        // A second payment sees the first committed coupon use without locking pending
-        // receipts.
         if (new KhachHangDAO().getForUpdate(connection, sale.getMaKhachHang()) == null) {
             throw new IllegalArgumentException("Không tìm thấy khách hàng để áp dụng khuyến mãi.");
         }
@@ -312,7 +305,7 @@ public class PhieuXuatDAO {
         ArrayList<String> productIds = new ArrayList<>();
         ArrayList<Integer> quantities = new ArrayList<>();
         try (PreparedStatement details = connection.prepareStatement(
-                "SELECT maSanPham,soLuong FROM ChiTietPhieuXuat WHERE maPhieuXuat=? ORDER BY maSanPham")) {
+                "SELECT maSanPham,soLuong FROM ChiTietHoaDon WHERE maHoaDon=? ORDER BY maSanPham")) {
             details.setString(1, id);
             try (ResultSet rows = details.executeQuery()) {
                 while (rows.next()) {
@@ -337,11 +330,11 @@ public class PhieuXuatDAO {
         }
     }
 
-    public boolean delete(String maPhieuXuat) {
-        String sql = "DELETE FROM PhieuXuat WHERE maPhieuXuat=? AND trangThai<>'DA_XUAT' AND diemDaXuLy=FALSE";
+    public boolean delete(String maHoaDon) {
+        String sql = "DELETE FROM HoaDon WHERE maHoaDon=? AND trangThai<>'DA_XUAT' AND diemDaXuLy=FALSE";
         try (Connection conn = connections.open();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maPhieuXuat);
+            ps.setString(1, maHoaDon);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -349,24 +342,24 @@ public class PhieuXuatDAO {
         return false;
     }
 
-    public String generateMaPhieuXuat() {
-        String sql = "SELECT maPhieuXuat FROM PhieuXuat ORDER BY maPhieuXuat DESC LIMIT 1";
+    public String generateMaHoaDon() {
+        String sql = "SELECT maHoaDon FROM HoaDon ORDER BY maHoaDon DESC LIMIT 1";
         try (Connection conn = connections.open();
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
-                int num = Integer.parseInt(rs.getString("maPhieuXuat").replaceAll("[^0-9]", ""));
-                return String.format("PX%03d", num + 1);
+                int num = Integer.parseInt(rs.getString("maHoaDon").replaceAll("[^0-9]", ""));
+                return String.format("HD%03d", num + 1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return "PX001";
+        return "HD001";
     }
 
-    private PhieuXuat mapRow(ResultSet rs) throws SQLException {
-        PhieuXuat sale = new PhieuXuat(
-                rs.getString("maPhieuXuat"),
+    private HoaDon mapRow(ResultSet rs) throws SQLException {
+        HoaDon sale = new HoaDon(
+                rs.getString("maHoaDon"),
                 rs.getDate("ngayLap").toLocalDate(),
                 rs.getString("maNhanVien"),
                 rs.getString("maKhachHang"),
