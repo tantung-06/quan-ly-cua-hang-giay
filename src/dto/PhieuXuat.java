@@ -11,6 +11,9 @@ public class PhieuXuat {
     private String phuongThucThanhToan;
     private double tongTien;
     private String trangThai;
+    private int diemSuDung;
+    private int diemDuocCong;
+    private boolean diemDaXuLy;
 
     public PhieuXuat() {
     }
@@ -89,5 +92,29 @@ public class PhieuXuat {
 
     public void setTrangThai(String trangThai) {
         this.trangThai = trangThai;
+    }
+
+    public int getDiemSuDung() {
+        return diemSuDung;
+    }
+
+    public void setDiemSuDung(int diemSuDung) {
+        this.diemSuDung = diemSuDung;
+    }
+
+    public int getDiemDuocCong() {
+        return diemDuocCong;
+    }
+
+    public void setDiemDuocCong(int diemDuocCong) {
+        this.diemDuocCong = diemDuocCong;
+    }
+
+    public boolean isDiemDaXuLy() {
+        return diemDaXuLy;
+    }
+
+    public void setDiemDaXuLy(boolean diemDaXuLy) {
+        this.diemDaXuLy = diemDaXuLy;
     }
 }

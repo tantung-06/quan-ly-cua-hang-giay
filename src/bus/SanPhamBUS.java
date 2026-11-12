@@ -1,16 +1,25 @@
 package bus;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import dao.SanPhamDAO;
 import dto.SanPham;
 
 public class SanPhamBUS {
 
-    private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
+    private final SanPhamDAO sanPhamDAO;
+
+    public SanPhamBUS() {
+        this(new SanPhamDAO());
+    }
+
+    public SanPhamBUS(SanPhamDAO sanPhamDAO) {
+        this.sanPhamDAO = Objects.requireNonNull(sanPhamDAO);
+    }
 
     private boolean isTrangThaiHopLe(String trangThai) {
-        return "CON_TRONG_KHO".equals(trangThai) || "HET_HANG".equals(trangThai) || "NGUNG_BAN".equals(trangThai);
+        return "DANG_BAN".equals(trangThai) || "NGUNG_BAN".equals(trangThai);
     }
 
     public ArrayList<SanPham> getAll() {
@@ -56,10 +65,7 @@ public class SanPhamBUS {
         if (s == null || !isDuLieuHopLe(s)) {
             return false;
         }
-        s.setMaSanPham(s.getMaSanPham().trim());
-        s.setTenSanPham(s.getTenSanPham().trim());
-        s.setMaLoaiGiay(s.getMaLoaiGiay().trim());
-        s.setMaThuongHieu(s.getMaThuongHieu().trim());
+        chuanHoaDuLieu(s);
         return sanPhamDAO.insert(s);
     }
 
@@ -67,10 +73,7 @@ public class SanPhamBUS {
         if (s == null || !isDuLieuHopLe(s)) {
             return false;
         }
-        s.setMaSanPham(s.getMaSanPham().trim());
-        s.setTenSanPham(s.getTenSanPham().trim());
-        s.setMaLoaiGiay(s.getMaLoaiGiay().trim());
-        s.setMaThuongHieu(s.getMaThuongHieu().trim());
+        chuanHoaDuLieu(s);
         return sanPhamDAO.update(s);
     }
 
@@ -87,7 +90,7 @@ public class SanPhamBUS {
         if (s.getMaThuongHieu() == null || s.getMaThuongHieu().trim().isEmpty()) {
             return false;
         }
-        if (s.getGiaBan() < 0 || s.getSoLuongTon() < 0) {
+        if (!Double.isFinite(s.getGiaBan()) || s.getGiaBan() < 0 || s.getSoLuongTon() < 0) {
             return false;
         }
         return isTrangThaiHopLe(s.getTrangThai());
@@ -112,5 +115,12 @@ public class SanPhamBUS {
 
     public String generateMaSanPham() {
         return sanPhamDAO.generateMaSanPham();
+    }
+
+    private void chuanHoaDuLieu(SanPham s) {
+        s.setMaSanPham(s.getMaSanPham().trim());
+        s.setTenSanPham(s.getTenSanPham().trim());
+        s.setMaLoaiGiay(s.getMaLoaiGiay().trim());
+        s.setMaThuongHieu(s.getMaThuongHieu().trim());
     }
 }

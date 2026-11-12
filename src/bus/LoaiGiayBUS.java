@@ -13,6 +13,10 @@ public class LoaiGiayBUS {
         return loaiGiayDAO.getAll();
     }
 
+    public String generateMaLoaiGiay() {
+        return loaiGiayDAO.generateMaLoaiGiay();
+    }
+
     public boolean insert(LoaiGiay lg) {
         if (!isDuLieuHopLe(lg)) {
             return false;

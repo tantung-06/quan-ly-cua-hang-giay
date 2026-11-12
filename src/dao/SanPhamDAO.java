@@ -1,6 +1,9 @@
 package dao;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 import config.DatabaseConnection;
@@ -14,15 +17,7 @@ public class SanPhamDAO {
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                SanPham s = new SanPham(
-                        rs.getString("maSanPham"),
-                        rs.getString("tenSanPham"),
-                        rs.getString("maLoaiGiay"),
-                        rs.getString("maThuongHieu"),
-                        rs.getDouble("giaBan"),
-                        rs.getInt("soLuongTon"),
-                        rs.getString("trangThai"));
-                ds.add(s);
+                ds.add(mapRow(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -36,17 +31,10 @@ public class SanPhamDAO {
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                SanPham s = new SanPham(
-                        rs.getString("maSanPham"),
-                        rs.getString("tenSanPham"),
-                        rs.getString("maLoaiGiay"),
-                        rs.getString("maThuongHieu"),
-                        rs.getDouble("giaBan"),
-                        rs.getInt("soLuongTon"),
-                        rs.getString("trangThai"));
-                ds.add(s);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ds.add(mapRow(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -60,17 +48,10 @@ public class SanPhamDAO {
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maThuongHieu);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                SanPham s = new SanPham(
-                        rs.getString("maSanPham"),
-                        rs.getString("tenSanPham"),
-                        rs.getString("maLoaiGiay"),
-                        rs.getString("maThuongHieu"),
-                        rs.getDouble("giaBan"),
-                        rs.getInt("soLuongTon"),
-                        rs.getString("trangThai"));
-                ds.add(s);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ds.add(mapRow(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -84,17 +65,10 @@ public class SanPhamDAO {
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maLoaiGiay);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                SanPham s = new SanPham(
-                        rs.getString("maSanPham"),
-                        rs.getString("tenSanPham"),
-                        rs.getString("maLoaiGiay"),
-                        rs.getString("maThuongHieu"),
-                        rs.getDouble("giaBan"),
-                        rs.getInt("soLuongTon"),
-                        rs.getString("trangThai"));
-                ds.add(s);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ds.add(mapRow(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -107,24 +81,16 @@ public class SanPhamDAO {
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maSanPham);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return new SanPham(
-                        rs.getString("maSanPham"),
-                        rs.getString("tenSanPham"),
-                        rs.getString("maLoaiGiay"),
-                        rs.getString("maThuongHieu"),
-                        rs.getDouble("giaBan"),
-                        rs.getInt("soLuongTon"),
-                        rs.getString("trangThai"));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
-    
-
 
     public ArrayList<SanPham> search(String keyword) {
         ArrayList<SanPham> ds = new ArrayList<>();
@@ -133,17 +99,10 @@ public class SanPhamDAO {
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, kw);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                SanPham s = new SanPham(
-                        rs.getString("maSanPham"),
-                        rs.getString("tenSanPham"),
-                        rs.getString("maLoaiGiay"),
-                        rs.getString("maThuongHieu"),
-                        rs.getDouble("giaBan"),
-                        rs.getInt("soLuongTon"),
-                        rs.getString("trangThai"));
-                ds.add(s);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ds.add(mapRow(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -187,8 +146,8 @@ public class SanPhamDAO {
         }
         return false;
     }
-    
-    public boolean delete(String maSanPham) {   
+
+    public boolean delete(String maSanPham) {
         String sql = "DELETE FROM SanPham WHERE maSanPham=?";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -199,7 +158,7 @@ public class SanPhamDAO {
         }
         return false;
     }
-    
+
     public boolean updateTrangThai(String maSanPham, String trangThai) {
         String sql = "UPDATE SanPham SET trangThai=? WHERE maSanPham=?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -221,11 +180,22 @@ public class SanPhamDAO {
             if (rs.next()) {
                 String last = rs.getString("maSanPham");
                 int num = Integer.parseInt(last.replaceAll("[^0-9]", ""));
-                return String.format("S%03d", num + 1);
+                return String.format("SP%03d", num + 1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return "S001";
+        return "SP001";
+    }
+
+    private SanPham mapRow(ResultSet rs) throws SQLException {
+        return new SanPham(
+                rs.getString("maSanPham"),
+                rs.getString("tenSanPham"),
+                rs.getString("maLoaiGiay"),
+                rs.getString("maThuongHieu"),
+                rs.getDouble("giaBan"),
+                rs.getInt("soLuongTon"),
+                rs.getString("trangThai"));
     }
 }

@@ -17,14 +17,7 @@ public class NhaCungCapDAO {
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                NhaCungCap ncc = new NhaCungCap(
-                        rs.getString("maNCC"),
-                        rs.getString("tenNCC"),
-                        rs.getString("soDienThoai"),
-                        rs.getString("diaChi"),
-                        rs.getString("email"),
-                        rs.getString("trangThai"));
-                ds.add(ncc);
+                ds.add(mapRow(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -39,14 +32,7 @@ public class NhaCungCapDAO {
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                NhaCungCap ncc = new NhaCungCap(
-                        rs.getString("maNCC"),
-                        rs.getString("tenNCC"),
-                        rs.getString("soDienThoai"),
-                        rs.getString("diaChi"),
-                        rs.getString("email"),
-                        rs.getString("trangThai"));
-                ds.add(ncc);
+                ds.add(mapRow(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -60,16 +46,10 @@ public class NhaCungCapDAO {
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                NhaCungCap ncc = new NhaCungCap(
-                        rs.getString("maNCC"),
-                        rs.getString("tenNCC"),
-                        rs.getString("soDienThoai"),
-                        rs.getString("diaChi"),
-                        rs.getString("email"),
-                        rs.getString("trangThai"));
-                ds.add(ncc);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ds.add(mapRow(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -82,15 +62,10 @@ public class NhaCungCapDAO {
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNCC);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return new NhaCungCap(
-                        rs.getString("maNCC"),
-                        rs.getString("tenNCC"),
-                        rs.getString("soDienThoai"),
-                        rs.getString("diaChi"),
-                        rs.getString("email"),
-                        rs.getString("trangThai"));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -170,5 +145,15 @@ public class NhaCungCapDAO {
             e.printStackTrace();
         }
         return "NCC001";
+    }
+
+    private NhaCungCap mapRow(ResultSet rs) throws SQLException {
+        return new NhaCungCap(
+                rs.getString("maNCC"),
+                rs.getString("tenNCC"),
+                rs.getString("soDienThoai"),
+                rs.getString("diaChi"),
+                rs.getString("email"),
+                rs.getString("trangThai"));
     }
 }

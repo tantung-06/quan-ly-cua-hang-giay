@@ -29,52 +29,18 @@ public class TaiKhoanBUS {
     }
 
     public boolean insert(TaiKhoan tk) {
-        if (tk == null) {
+        if (!isDuLieuHopLe(tk)) {
             return false;
         }
-        if (tk.getMaTaiKhoan() == null || tk.getMaTaiKhoan().trim().isEmpty()) {
-            return false;
-        }
-        if (tk.getTenDangNhap() == null || tk.getTenDangNhap().trim().isEmpty()) {
-            return false;
-        }
-        if (tk.getMatKhau() == null || tk.getMatKhau().trim().isEmpty()) {
-            return false;
-        }
-        if (tk.getMaNhomQuyen() == null || tk.getMaNhomQuyen().trim().isEmpty()) {
-            return false;
-        }
-        if (!isTrangThaiHopLe(tk.getTrangThai())) {
-            return false;
-        }
-        tk.setMaTaiKhoan(tk.getMaTaiKhoan().trim());
-        tk.setTenDangNhap(tk.getTenDangNhap().trim());
-        tk.setMaNhomQuyen(tk.getMaNhomQuyen().trim());
+        chuanHoaDuLieu(tk);
         return taiKhoanDAO.insert(tk);
     }
 
     public boolean update(TaiKhoan tk) {
-        if (tk == null) {
+        if (!isDuLieuHopLe(tk)) {
             return false;
         }
-        if (tk.getMaTaiKhoan() == null || tk.getMaTaiKhoan().trim().isEmpty()) {
-            return false;
-        }
-        if (tk.getTenDangNhap() == null || tk.getTenDangNhap().trim().isEmpty()) {
-            return false;
-        }
-        if (tk.getMatKhau() == null || tk.getMatKhau().trim().isEmpty()) {
-            return false;
-        }
-        if (tk.getMaNhomQuyen() == null || tk.getMaNhomQuyen().trim().isEmpty()) {
-            return false;
-        }
-        if (!isTrangThaiHopLe(tk.getTrangThai())) {
-            return false;
-        }
-        tk.setMaTaiKhoan(tk.getMaTaiKhoan().trim());
-        tk.setTenDangNhap(tk.getTenDangNhap().trim());
-        tk.setMaNhomQuyen(tk.getMaNhomQuyen().trim());
+        chuanHoaDuLieu(tk);
         return taiKhoanDAO.update(tk);
     }
 
@@ -108,5 +74,30 @@ public class TaiKhoanBUS {
 
     private boolean isTrangThaiHopLe(String trangThai) {
         return "HOAT_DONG".equals(trangThai) || "NGUNG".equals(trangThai);
+    }
+
+    private boolean isDuLieuHopLe(TaiKhoan tk) {
+        if (tk == null) {
+            return false;
+        }
+        if (tk.getMaTaiKhoan() == null || tk.getMaTaiKhoan().trim().isEmpty()) {
+            return false;
+        }
+        if (tk.getTenDangNhap() == null || tk.getTenDangNhap().trim().isEmpty()) {
+            return false;
+        }
+        if (tk.getMatKhau() == null || tk.getMatKhau().trim().isEmpty()) {
+            return false;
+        }
+        if (tk.getMaNhomQuyen() == null || tk.getMaNhomQuyen().trim().isEmpty()) {
+            return false;
+        }
+        return isTrangThaiHopLe(tk.getTrangThai());
+    }
+
+    private void chuanHoaDuLieu(TaiKhoan tk) {
+        tk.setMaTaiKhoan(tk.getMaTaiKhoan().trim());
+        tk.setTenDangNhap(tk.getTenDangNhap().trim());
+        tk.setMaNhomQuyen(tk.getMaNhomQuyen().trim());
     }
 }

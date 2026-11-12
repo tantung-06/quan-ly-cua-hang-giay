@@ -17,10 +17,7 @@ public class LoaiGiayDAO {
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                LoaiGiay lg = new LoaiGiay(
-                        rs.getString("maLoaiGiay"),
-                        rs.getString("tenLoaiGiay"));
-                ds.add(lg);
+                ds.add(mapRow(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -64,5 +61,26 @@ public class LoaiGiayDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public String generateMaLoaiGiay() {
+        String sql = "SELECT COALESCE(MAX(CAST(SUBSTRING(maLoaiGiay, 3) AS UNSIGNED)), 0) + 1 AS nextCode "
+                + "FROM LoaiGiay WHERE maLoaiGiay REGEXP '^LG[0-9]+$'";
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return String.format("LG%03d", rs.getInt("nextCode"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private LoaiGiay mapRow(ResultSet rs) throws SQLException {
+        return new LoaiGiay(
+                rs.getString("maLoaiGiay"),
+                rs.getString("tenLoaiGiay"));
     }
 }

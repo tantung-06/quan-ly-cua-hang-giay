@@ -6,8 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import dto.ChiTietPhieuNhap;
 import config.DatabaseConnection;
+import dto.ChiTietPhieuNhap;
 
 public class ChiTietPhieuNhapDAO {
     public ArrayList<ChiTietPhieuNhap> getByPhieuNhap(String maPhieuNhap) {
@@ -16,15 +16,10 @@ public class ChiTietPhieuNhapDAO {
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maPhieuNhap);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                ChiTietPhieuNhap ctpn = new ChiTietPhieuNhap(
-                        rs.getString("maPhieuNhap"),
-                        rs.getString("maSanPham"),
-                        rs.getInt("soLuong"),
-                        rs.getDouble("giaNhap"),
-                        rs.getDouble("thanhTien"));
-                ds.add(ctpn);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ds.add(mapRow(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -38,14 +33,10 @@ public class ChiTietPhieuNhapDAO {
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maPhieuNhap);
             ps.setString(2, maSanPham);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return new ChiTietPhieuNhap(
-                        rs.getString("maPhieuNhap"),
-                        rs.getString("maSanPham"),
-                        rs.getInt("soLuong"),
-                        rs.getDouble("giaNhap"),
-                        rs.getDouble("thanhTien"));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -71,21 +62,38 @@ public class ChiTietPhieuNhapDAO {
 
     public boolean insertBatch(ArrayList<ChiTietPhieuNhap> ds) {
         String sql = "INSERT INTO ChiTietPhieuNhap(maPhieuNhap,maSanPham,soLuong,giaNhap,thanhTien) VALUES(?,?,?,?,?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-            conn.setAutoCommit(false);
-            for (ChiTietPhieuNhap obj : ds) {
-                ps.setString(1, obj.getMaPhieuNhap());
-                ps.setString(2, obj.getMaSanPham());
-                ps.setInt(3, obj.getSoLuong());
-                ps.setDouble(4, obj.getGiaNhap());
-                ps.setDouble(5, obj.getThanhTien());
-                ps.addBatch();
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean previousAutoCommit = conn.getAutoCommit();
+            try {
+                conn.setAutoCommit(false);
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    for (ChiTietPhieuNhap obj : ds) {
+                        ps.setString(1, obj.getMaPhieuNhap());
+                        ps.setString(2, obj.getMaSanPham());
+                        ps.setInt(3, obj.getSoLuong());
+                        ps.setDouble(4, obj.getGiaNhap());
+                        ps.setDouble(5, obj.getThanhTien());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                e.printStackTrace();
+                return false;
+            } finally {
+                try {
+                    conn.setAutoCommit(previousAutoCommit);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
-            ps.executeBatch();
-            conn.commit();
-            conn.setAutoCommit(true);
-            return true;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -126,10 +134,20 @@ public class ChiTietPhieuNhapDAO {
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maPhieuNhap);
-            return ps.executeUpdate() > 0;
+            ps.executeUpdate();
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
+    }
+
+    private ChiTietPhieuNhap mapRow(ResultSet rs) throws SQLException {
+        return new ChiTietPhieuNhap(
+                rs.getString("maPhieuNhap"),
+                rs.getString("maSanPham"),
+                rs.getInt("soLuong"),
+                rs.getDouble("giaNhap"),
+                rs.getDouble("thanhTien"));
     }
 }

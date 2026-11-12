@@ -2,11 +2,13 @@ package bus;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
-import dao.PhieuNhapDAO;
 import dao.ChiTietPhieuNhapDAO;
-import dto.PhieuNhap;
+import dao.PhieuNhapDAO;
 import dto.ChiTietPhieuNhap;
+import dto.PhieuNhap;
 
 public class PhieuNhapBUS {
 
@@ -42,7 +44,7 @@ public class PhieuNhapBUS {
         if (pn.getMaNCC() == null || pn.getMaNCC().trim().isEmpty()) {
             return "Vui lòng chọn nhà cung cấp!";
         }
-        if (Double.isNaN(pn.getTongTien()) || Double.isInfinite(pn.getTongTien()) || pn.getTongTien() < 0) {
+        if (!Double.isFinite(pn.getTongTien()) || pn.getTongTien() < 0) {
             return "Tổng tiền không hợp lệ!";
         }
         if (!isTrangThaiHopLe(pn.getTrangThai())) {
@@ -102,13 +104,31 @@ public class PhieuNhapBUS {
         if (maPhieuNhap == null || maPhieuNhap.trim().isEmpty()) {
             return false;
         }
-        if (!isTrangThaiHopLe(trangThai)) {
+        if ("DA_NHAP".equals(trangThai)) {
+            return hoanTatNhap(maPhieuNhap);
+        }
+        if ("HUY".equals(trangThai)) {
+            return huyPhieu(maPhieuNhap);
+        }
+        return false;
+    }
+
+    public boolean huyPhieu(String maPhieuNhap) {
+        if (maPhieuNhap == null || maPhieuNhap.trim().isEmpty()) {
             return false;
         }
-        if (phieuNhapDAO.getById(maPhieuNhap.trim()) == null) {
+        PhieuNhap phieu = phieuNhapDAO.getById(maPhieuNhap.trim());
+        if (phieu == null || !"CHO_XU_LY".equals(phieu.getTrangThai())) {
             return false;
         }
-        return phieuNhapDAO.updateTrangThai(maPhieuNhap.trim(), trangThai);
+        return phieuNhapDAO.updateTrangThai(maPhieuNhap.trim(), "HUY");
+    }
+
+    public boolean hoanTatNhap(String maPhieuNhap) {
+        if (maPhieuNhap == null || maPhieuNhap.trim().isEmpty()) {
+            return false;
+        }
+        return phieuNhapDAO.nhapKho(maPhieuNhap.trim());
     }
 
     public boolean delete(String maPhieuNhap) {
@@ -148,15 +168,15 @@ public class PhieuNhapBUS {
             return "Mã phiếu nhập không được để trống!";
         }
         if (ct.getMaSanPham() == null || ct.getMaSanPham().trim().isEmpty()) {
-            return "Vui lòng chọn biến thể giày!";
+            return "Vui lòng chọn sản phẩm!";
         }
         if (ct.getSoLuong() <= 0) {
             return "Số lượng nhập phải lớn hơn 0!";
         }
-        if (Double.isNaN(ct.getGiaNhap()) || Double.isInfinite(ct.getGiaNhap()) || ct.getGiaNhap() < 0) {
+        if (!Double.isFinite(ct.getGiaNhap()) || ct.getGiaNhap() < 0) {
             return "Giá nhập không hợp lệ!";
         }
-        if (Double.isNaN(ct.getThanhTien()) || Double.isInfinite(ct.getThanhTien()) || ct.getThanhTien() < 0) {
+        if (!Double.isFinite(ct.getThanhTien()) || ct.getThanhTien() < 0) {
             return "Thành tiền không hợp lệ!";
         }
         double thanhTienDuKien = (double) ct.getSoLuong() * ct.getGiaNhap();
@@ -190,7 +210,11 @@ public class PhieuNhapBUS {
         if (ds == null || ds.isEmpty()) {
             return false;
         }
-        String maPhieuNhap = ds.get(0).getMaPhieuNhap();
+        ChiTietPhieuNhap dauTien = ds.get(0);
+        if (dauTien == null) {
+            return false;
+        }
+        String maPhieuNhap = dauTien.getMaPhieuNhap();
         if (maPhieuNhap == null || maPhieuNhap.trim().isEmpty()) {
             return false;
         }
@@ -201,7 +225,7 @@ public class PhieuNhapBUS {
         if (!"CHO_XU_LY".equals(pn.getTrangThai())) {
             return false;
         }
-        ArrayList<String> maSanPhamDaCo = new ArrayList<>();
+        Set<String> maSanPhamDaCo = new HashSet<>();
         for (ChiTietPhieuNhap ct : ds) {
             String loi = validateChiTiet(ct);
             if (loi != null) {
@@ -211,10 +235,9 @@ public class PhieuNhapBUS {
                 return false;
             }
             String maSanPham = ct.getMaSanPham().trim();
-            if (maSanPhamDaCo.contains(maSanPham)) {
+            if (!maSanPhamDaCo.add(maSanPham)) {
                 return false;
             }
-            maSanPhamDaCo.add(maSanPham);
             if (chiTietPhieuNhapDAO.getById(maPhieuNhap.trim(), maSanPham) != null) {
                 return false;
             }

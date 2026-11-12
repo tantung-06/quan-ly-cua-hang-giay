@@ -1,80 +1,97 @@
 package dao;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.TreeSet;
 
 import config.DatabaseConnection;
+import config.DatabaseConnection.ConnectionFactory;
 import dto.KhuyenMai;
 
 public class KhuyenMaiDAO {
-    public ArrayList<KhuyenMai> getAll(){
+    private final ConnectionFactory connections;
+
+    public KhuyenMaiDAO() {
+        this(DatabaseConnection::getConnection);
+    }
+
+    public KhuyenMaiDAO(ConnectionFactory connections) {
+        this.connections = java.util.Objects.requireNonNull(connections);
+    }
+
+    public Set<String> getMaDaSuDung(String customerId) {
+        try (Connection connection = connections.open()) {
+            return getMaDaSuDung(connection, customerId);
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Không thể kiểm tra mã khuyến mãi khách hàng đã sử dụng.", ex);
+        }
+    }
+
+    /**
+     * Include legacy canceled settlements; pending receipts do not consume a code.
+     */
+    public Set<String> getMaDaSuDung(Connection connection, String customerId) throws SQLException {
+        String sql = "SELECT maKhuyenMai FROM PhieuXuat WHERE maKhachHang=? AND maKhuyenMai IS NOT NULL "
+                + "AND (trangThai='DA_XUAT' OR diemDaXuLy=TRUE)";
+        Set<String> codes = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, customerId);
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    codes.add(rows.getString("maKhuyenMai").trim());
+                }
+            }
+        }
+        return codes;
+    }
+
+    public ArrayList<KhuyenMai> getAll() {
         ArrayList<KhuyenMai> ds = new ArrayList<>();
         String sql = "SELECT * FROM KhuyenMai ORDER BY maKhuyenMai ASC";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()){
-                KhuyenMai km = new KhuyenMai(
-                        rs.getString("maKhuyenMai"),
-                        rs.getString("tenKhuyenMai"),
-                        rs.getDouble("donHangToiThieu"),
-                        rs.getString("loaiKhuyenMai"),
-                        rs.getDouble("mucGiam"),
-                        rs.getDate("ngayBatDau").toLocalDate(),
-                        rs.getDate("ngayKetThuc").toLocalDate(),
-                        rs.getString("trangThai"));
-                ds.add(km);
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                ds.add(mapRow(rs));
             }
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return ds;
     }
 
-    public ArrayList<KhuyenMai> getApDung(){
+    public ArrayList<KhuyenMai> getApDung() {
         ArrayList<KhuyenMai> ds = new ArrayList<>();
         String sql = "SELECT * FROM KhuyenMai WHERE trangThai='AP_DUNG'";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()){
-                KhuyenMai km = new KhuyenMai(
-                        rs.getString("maKhuyenMai"),
-                        rs.getString("tenKhuyenMai"),
-                        rs.getDouble("donHangToiThieu"),
-                        rs.getString("loaiKhuyenMai"),
-                        rs.getDouble("mucGiam"),
-                        rs.getDate("ngayBatDau").toLocalDate(),
-                        rs.getDate("ngayKetThuc").toLocalDate(),
-                        rs.getString("trangThai"));
-                ds.add(km);
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                ds.add(mapRow(rs));
             }
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return ds;
     }
-    
-    public ArrayList<KhuyenMai> getByTrangThai(String trangThai){
+
+    public ArrayList<KhuyenMai> getByTrangThai(String trangThai) {
         ArrayList<KhuyenMai> ds = new ArrayList<>();
-        String sql = "SELECT * FROM NhanVien WHERE trangThai=?";
-        try(Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)){
+        String sql = "SELECT * FROM KhuyenMai WHERE trangThai=?";
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()){
-                KhuyenMai km = new KhuyenMai(
-                        rs.getString("maKhuyenMai"),
-                        rs.getString("tenKhuyenMai"),
-                        rs.getDouble("donHangToiThieu"),
-                        rs.getString("loaiKhuyenMai"),
-                        rs.getDouble("mucGiam"),
-                        rs.getDate("ngayBatDau").toLocalDate(),
-                        rs.getDate("ngayKetThuc").toLocalDate(),
-                        rs.getString("trangThai"));
-                ds.add(km);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ds.add(mapRow(rs));
+                }
             }
-        } catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return ds;
@@ -82,31 +99,24 @@ public class KhuyenMaiDAO {
 
     public KhuyenMai getById(String maKhuyenMai) {
         String sql = "SELECT * FROM KhuyenMai WHERE maKhuyenMai=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maKhuyenMai);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return new KhuyenMai(
-                        rs.getString("maKhuyenMai"),
-                        rs.getString("tenKhuyenMai"),
-                        rs.getDouble("donHangToiThieu"),
-                        rs.getString("loaiKhuyenMai"),
-                        rs.getDouble("mucGiam"),
-                        rs.getDate("ngayBatDau").toLocalDate(),
-                        rs.getDate("ngayKetThuc").toLocalDate(),
-                        rs.getString("trangThai"));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
             }
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
 
     public boolean insert(KhuyenMai km) {
-        String sql = "INSERT INTO KhuyenMai(maKhuyenMai,tenKhuyenMai,donHangToiThieu,loaiKhuyenMai,mucGiam,ngayBatDau,ngayKetThuc,trangThai) VALUES(?,?,?,?,?,?,?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql = "INSERT INTO KhuyenMai(maKhuyenMai,tenKhuyenMai,donHangToiThieu,loaiKhuyenMai,mucGiam,ngayBatDau,ngayKetThuc,trangThai) VALUES(?,?,?,?,?,?,?,?)";
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, km.getMaKhuyenMai());
             ps.setString(2, km.getTenKhuyenMai());
             ps.setDouble(3, km.getDonHangToiThieu());
@@ -116,7 +126,7 @@ public class KhuyenMaiDAO {
             ps.setDate(7, Date.valueOf(km.getNgayKetThuc()));
             ps.setString(8, km.getTrangThai());
             return ps.executeUpdate() > 0;
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
@@ -124,8 +134,8 @@ public class KhuyenMaiDAO {
 
     public boolean update(KhuyenMai km) {
         String sql = "UPDATE KhuyenMai SET tenKhuyenMai=?,donHangToiThieu=?,loaiKhuyenMai=?,mucGiam=?,ngayBatDau=?,ngayKetThuc=?,trangThai=? WHERE maKhuyenMai=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, km.getTenKhuyenMai());
             ps.setDouble(2, km.getDonHangToiThieu());
             ps.setString(3, km.getLoaiKhuyenMai());
@@ -135,7 +145,7 @@ public class KhuyenMaiDAO {
             ps.setString(7, km.getTrangThai());
             ps.setString(8, km.getMaKhuyenMai());
             return ps.executeUpdate() > 0;
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
@@ -143,12 +153,12 @@ public class KhuyenMaiDAO {
 
     public boolean updateTrangThai(String maKhuyenMai, String trangThai) {
         String sql = "UPDATE KhuyenMai SET trangThai=? WHERE maKhuyenMai=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
             ps.setString(2, maKhuyenMai);
             return ps.executeUpdate() > 0;
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
@@ -156,21 +166,21 @@ public class KhuyenMaiDAO {
 
     public boolean delete(String maKhuyenMai) {
         String sql = "DELETE FROM KhuyenMai WHERE maKhuyenMai=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maKhuyenMai);
             return ps.executeUpdate() > 0;
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
     }
-    
+
     public String generateMaKhuyenMai() {
         String sql = "SELECT maKhuyenMai FROM KhuyenMai ORDER BY maKhuyenMai DESC LIMIT 1";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
                 int num = Integer.parseInt(rs.getString("maKhuyenMai").replaceAll("[^0-9]", ""));
                 return String.format("KM%03d", num + 1);
@@ -179,5 +189,17 @@ public class KhuyenMaiDAO {
             e.printStackTrace();
         }
         return "KM001";
+    }
+
+    private KhuyenMai mapRow(ResultSet rs) throws SQLException {
+        return new KhuyenMai(
+                rs.getString("maKhuyenMai"),
+                rs.getString("tenKhuyenMai"),
+                rs.getDouble("donHangToiThieu"),
+                rs.getString("loaiKhuyenMai"),
+                rs.getDouble("mucGiam"),
+                rs.getDate("ngayBatDau").toLocalDate(),
+                rs.getDate("ngayKetThuc").toLocalDate(),
+                rs.getString("trangThai"));
     }
 }

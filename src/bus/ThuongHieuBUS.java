@@ -7,10 +7,14 @@ import dto.ThuongHieu;
 
 public class ThuongHieuBUS {
 
-    private ThuongHieuDAO thuongHieuDAO = new ThuongHieuDAO();
+    private final ThuongHieuDAO thuongHieuDAO = new ThuongHieuDAO();
 
     public ArrayList<ThuongHieu> getAll() {
         return thuongHieuDAO.getAll();
+    }
+
+    public String generateMaThuongHieu() {
+        return thuongHieuDAO.generateMaThuongHieu();
     }
 
     public boolean insert(ThuongHieu th) {

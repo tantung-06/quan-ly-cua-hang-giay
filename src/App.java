@@ -1,8 +1,17 @@
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
 import gui.Login;
-import gui.MainFrame;
 
 public class App {
     public static void main(String[] args) {
-        new Login().setVisible(true);
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            new Login().setVisible(true);
+        });
     }
 }

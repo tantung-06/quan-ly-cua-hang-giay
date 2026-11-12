@@ -1,6 +1,10 @@
 package dao;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 import config.DatabaseConnection;
@@ -14,14 +18,7 @@ public class PhieuNhapDAO {
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                PhieuNhap pn = new PhieuNhap(
-                        rs.getString("maPhieuNhap"),
-                        rs.getDate("ngayNhap").toLocalDate(),
-                        rs.getString("maNhanVien"),
-                        rs.getString("maNCC"),
-                        rs.getDouble("tongTien"),
-                        rs.getString("trangThai"));
-                ds.add(pn);
+                ds.add(mapRow(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -35,16 +32,10 @@ public class PhieuNhapDAO {
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                PhieuNhap pn = new PhieuNhap(
-                        rs.getString("maPhieuNhap"),
-                        rs.getDate("ngayNhap").toLocalDate(),
-                        rs.getString("maNhanVien"),
-                        rs.getString("maNCC"),
-                        rs.getDouble("tongTien"),
-                        rs.getString("trangThai"));
-                ds.add(pn);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ds.add(mapRow(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -58,16 +49,10 @@ public class PhieuNhapDAO {
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNhanVien);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                PhieuNhap pn = new PhieuNhap(
-                        rs.getString("maPhieuNhap"),
-                        rs.getDate("ngayNhap").toLocalDate(),
-                        rs.getString("maNhanVien"),
-                        rs.getString("maNCC"),
-                        rs.getDouble("tongTien"),
-                        rs.getString("trangThai"));
-                ds.add(pn);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ds.add(mapRow(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -80,15 +65,10 @@ public class PhieuNhapDAO {
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maPhieuNhap);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return new PhieuNhap(
-                        rs.getString("maPhieuNhap"),
-                        rs.getDate("ngayNhap").toLocalDate(),
-                        rs.getString("maNhanVien"),
-                        rs.getString("maNCC"),
-                        rs.getDouble("tongTien"),
-                        rs.getString("trangThai"));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -131,7 +111,7 @@ public class PhieuNhapDAO {
     }
 
     public boolean updateTrangThai(String maPhieuNhap, String trangThai) {
-        String sql = "UPDATE PhieuNhap SET trangThai=? WHERE maPhieuNhap=?";
+        String sql = "UPDATE PhieuNhap SET trangThai=? WHERE maPhieuNhap=? AND trangThai='CHO_XU_LY'";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
@@ -141,6 +121,81 @@ public class PhieuNhapDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public boolean nhapKho(String maPhieuNhap) {
+        String lockSql = "SELECT trangThai FROM PhieuNhap WHERE maPhieuNhap=? FOR UPDATE";
+        String detailsSql = "SELECT maSanPham, soLuong FROM ChiTietPhieuNhap WHERE maPhieuNhap=? ORDER BY maSanPham";
+        String stockSql = "UPDATE SanPham SET soLuongTon=soLuongTon+? WHERE maSanPham=?";
+        String completeSql = "UPDATE PhieuNhap SET trangThai='DA_NHAP' WHERE maPhieuNhap=? AND trangThai='CHO_XU_LY'";
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean previousAutoCommit = conn.getAutoCommit();
+            try {
+                conn.setAutoCommit(false);
+                try (PreparedStatement lock = conn.prepareStatement(lockSql)) {
+                    lock.setString(1, maPhieuNhap);
+                    try (ResultSet rs = lock.executeQuery()) {
+                        if (!rs.next() || !"CHO_XU_LY".equals(rs.getString("trangThai"))) {
+                            conn.rollback();
+                            return false;
+                        }
+                    }
+                }
+
+                ArrayList<String> productIds = new ArrayList<>();
+                ArrayList<Integer> quantities = new ArrayList<>();
+                try (PreparedStatement details = conn.prepareStatement(detailsSql)) {
+                    details.setString(1, maPhieuNhap);
+                    try (ResultSet rs = details.executeQuery()) {
+                        while (rs.next()) {
+                            productIds.add(rs.getString("maSanPham"));
+                            quantities.add(rs.getInt("soLuong"));
+                        }
+                    }
+                }
+                if (productIds.isEmpty()) {
+                    conn.rollback();
+                    return false;
+                }
+                try (PreparedStatement stock = conn.prepareStatement(stockSql)) {
+                    for (int i = 0; i < productIds.size(); i++) {
+                        stock.setInt(1, quantities.get(i));
+                        stock.setString(2, productIds.get(i));
+                        if (stock.executeUpdate() != 1) {
+                            conn.rollback();
+                            return false;
+                        }
+                    }
+                }
+
+                try (PreparedStatement complete = conn.prepareStatement(completeSql)) {
+                    complete.setString(1, maPhieuNhap);
+                    if (complete.executeUpdate() != 1) {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                e.printStackTrace();
+                return false;
+            } finally {
+                try {
+                    conn.setAutoCommit(previousAutoCommit);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean delete(String maPhieuNhap) {
@@ -168,5 +223,15 @@ public class PhieuNhapDAO {
             e.printStackTrace();
         }
         return "PN001";
+    }
+
+    private PhieuNhap mapRow(ResultSet rs) throws SQLException {
+        return new PhieuNhap(
+                rs.getString("maPhieuNhap"),
+                rs.getDate("ngayNhap").toLocalDate(),
+                rs.getString("maNhanVien"),
+                rs.getString("maNCC"),
+                rs.getDouble("tongTien"),
+                rs.getString("trangThai"));
     }
 }

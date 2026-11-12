@@ -42,7 +42,7 @@ public class KhachHangBUS {
         if (!isTrangThaiHopLe(kh.getTrangThai())) {
             return false;
         }
-        if (kh.getDiemTichLuy() < 0) {
+        if (kh.getDiemTichLuy() != 0) {
             return false;
         }
         return khachHangDAO.insert(kh);

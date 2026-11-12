@@ -1,57 +1,54 @@
 package dao;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
-import dto.KhachHang;
 import config.DatabaseConnection;
+import config.DatabaseConnection.ConnectionFactory;
+import dto.KhachHang;
 
 public class KhachHangDAO {
+    private final ConnectionFactory connections;
+
+    public KhachHangDAO() {
+        this(DatabaseConnection::getConnection);
+    }
+
+    public KhachHangDAO(ConnectionFactory connections) {
+        this.connections = java.util.Objects.requireNonNull(connections);
+    }
+
     public ArrayList<KhachHang> getAll() {
         ArrayList<KhachHang> ds = new ArrayList<>();
         String sql = "SELECT * FROM KhachHang ORDER BY maKhachHang ASC";
-        try (Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()) {
-            while(rs.next()) {
-                KhachHang kh = new KhachHang(
-                        rs.getString("maKhachHang"),
-                        rs.getString("ho"),
-                        rs.getString("ten"),
-                        rs.getString("soDienThoai"),
-                        rs.getString("diaChi"),
-                        rs.getString("email"),
-                        rs.getInt("diemTichLuy"),
-                        rs.getString("trangThai"));
-                ds.add(kh);
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                ds.add(mapRow(rs));
             }
-        } catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
         return ds;
     }
 
-    public ArrayList<KhachHang> getByTrangThai(String trangThai){
+    public ArrayList<KhachHang> getByTrangThai(String trangThai) {
         ArrayList<KhachHang> ds = new ArrayList<>();
         String sql = "SELECT * FROM KhachHang WHERE trangThai=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
-            ResultSet rs = ps.executeQuery();
-            while(rs.next()) {
-                KhachHang kh = new KhachHang(
-                        rs.getString("maKhachHang"),
-                        rs.getString("ho"),
-                        rs.getString("ten"),
-                        rs.getString("soDienThoai"),
-                        rs.getString("diaChi"),
-                        rs.getString("email"),
-                        rs.getInt("diemTichLuy"),
-                        rs.getString("trangThai"));
-                ds.add(kh);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ds.add(mapRow(rs));
+                }
             }
-        } catch(SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return ds;
@@ -59,89 +56,73 @@ public class KhachHangDAO {
 
     public KhachHang getById(String maKhachHang) {
         String sql = "SELECT * FROM KhachHang WHERE maKhachHang=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maKhachHang);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return new KhachHang(
-                        rs.getString("maKhachHang"),
-                        rs.getString("ho"),
-                        rs.getString("ten"),
-                        rs.getString("soDienThoai"),
-                        rs.getString("diaChi"),
-                        rs.getString("email"),
-                        rs.getInt("diemTichLuy"),
-                        rs.getString("trangThai"));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
             }
-        } catch(SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    public ArrayList<KhachHang> search(String keyword){
+    public ArrayList<KhachHang> search(String keyword) {
         ArrayList<KhachHang> ds = new ArrayList<>();
         String sql = "SELECT * FROM KhachHang WHERE ho LIKE ? OR ten LIKE ? OR soDienThoai LIKE ? OR email LIKE ?";
         String kw = "%" + keyword + "%";
-        try (Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, kw);
             ps.setString(2, kw);
             ps.setString(3, kw);
             ps.setString(4, kw);
-            ResultSet rs = ps.executeQuery();
-            while(rs.next()) {
-                KhachHang kh = new KhachHang(
-                        rs.getString("maKhachHang"),
-                        rs.getString("ho"),
-                        rs.getString("ten"),
-                        rs.getString("soDienThoai"),
-                        rs.getString("diaChi"),
-                        rs.getString("email"),
-                        rs.getInt("diemTichLuy"),
-                        rs.getString("trangThai"));
-                ds.add(kh);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ds.add(mapRow(rs));
+                }
             }
-        } catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return ds;
     }
 
     public boolean insert(KhachHang kh) {
-        String sql = "INSERT INTO KhachHang(maKhachHang,ho,ten,soDienThoai,diaChi,email,diemTichLuy,trangThai) VALUES(?,?,?,?,?,?,?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql = "INSERT INTO KhachHang(maKhachHang,ho,ten,soDienThoai,diaChi,email,diemTichLuy,trangThai) VALUES(?,?,?,?,?,?,?,?)";
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, kh.getMaKhachHang());
             ps.setString(2, kh.getHo());
             ps.setString(3, kh.getTen());
             ps.setString(4, kh.getSoDienThoai());
             ps.setString(5, kh.getDiaChi());
             ps.setString(6, kh.getEmail());
-            ps.setInt(7, kh.getDiemTichLuy());
+            ps.setInt(7, 0);
             ps.setString(8, kh.getTrangThai());
             return ps.executeUpdate() > 0;
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
     }
 
-    public boolean update(KhachHang kh){
-        String sql = "UPDATE KhachHang SET ho=?,ten=?,soDienThoai=?,diaChi=?,email=?,diemTichLuy=?,trangThai=? WHERE maKhachHang=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql)) {
+    public boolean update(KhachHang kh) {
+        String sql = "UPDATE KhachHang SET ho=?,ten=?,soDienThoai=?,diaChi=?,email=?,trangThai=? WHERE maKhachHang=?";
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, kh.getHo());
             ps.setString(2, kh.getTen());
             ps.setString(3, kh.getSoDienThoai());
             ps.setString(4, kh.getDiaChi());
             ps.setString(5, kh.getEmail());
-            ps.setInt(6, kh.getDiemTichLuy());
-            ps.setString(7, kh.getTrangThai());
-            ps.setString(8, kh.getMaKhachHang());
+            ps.setString(6, kh.getTrangThai());
+            ps.setString(7, kh.getMaKhachHang());
             return ps.executeUpdate() > 0;
-        } catch(SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
@@ -149,34 +130,34 @@ public class KhachHangDAO {
 
     public boolean updateTrangThai(String maKhachHang, String trangThai) {
         String sql = "UPDATE KhachHang SET trangThai=? WHERE maKhachHang=?";
-        try (Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = connections.open();
+                PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, trangThai);
             ps.setString(2, maKhachHang);
             return ps.executeUpdate() > 0;
-        } catch(SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
     }
 
-    public boolean delete(String maKhachHang){
+    public boolean delete(String maKhachHang) {
         String sql = "DELETE FROM KhachHang WHERE maKhachHang=?";
-        try (Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = connections.open();
+                PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, maKhachHang);
             return ps.executeUpdate() > 0;
-        } catch(SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
     }
-    
+
     public String generateMaKhachHang() {
         String sql = "SELECT maKhachHang FROM KhachHang ORDER BY maKhachHang DESC LIMIT 1";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = connections.open();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
                 int num = Integer.parseInt(rs.getString("maKhachHang").replaceAll("[^0-9]", ""));
                 return String.format("KH%03d", num + 1);
@@ -185,5 +166,38 @@ public class KhachHangDAO {
             e.printStackTrace();
         }
         return "KH001";
+    }
+
+    public KhachHang getForUpdate(Connection connection, String customerId) throws SQLException {
+        try (PreparedStatement statement = connection
+                .prepareStatement("SELECT * FROM KhachHang WHERE maKhachHang=? FOR UPDATE")) {
+            statement.setString(1, customerId);
+            try (ResultSet rows = statement.executeQuery()) {
+                return rows.next() ? mapRow(rows) : null;
+            }
+        }
+    }
+
+    public void updateDiem(Connection connection, String customerId, dto.SoDuDiem balance) throws SQLException {
+        try (PreparedStatement statement = connection
+                .prepareStatement("UPDATE KhachHang SET diemTichLuy=? WHERE maKhachHang=?")) {
+            statement.setInt(1, balance.getDiemHienCo());
+            statement.setString(2, customerId);
+            if (statement.executeUpdate() != 1) {
+                throw new SQLException("Không thể cập nhật điểm khách hàng.");
+            }
+        }
+    }
+
+    private KhachHang mapRow(ResultSet rs) throws SQLException {
+        return new KhachHang(
+                rs.getString("maKhachHang"),
+                rs.getString("ho"),
+                rs.getString("ten"),
+                rs.getString("soDienThoai"),
+                rs.getString("diaChi"),
+                rs.getString("email"),
+                rs.getInt("diemTichLuy"),
+                rs.getString("trangThai"));
     }
 }

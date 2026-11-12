@@ -38,14 +38,7 @@ public class NhanVienBUS {
         if (!isDuLieuHopLe(nv)) {
             return false;
         }
-        nv.setMaNhanVien(nv.getMaNhanVien().trim());
-        nv.setHo(nv.getHo().trim());
-        nv.setTen(nv.getTen().trim());
-        nv.setSoDienThoai(nv.getSoDienThoai().trim());
-        nv.setDiaChi(nv.getDiaChi().trim());
-        nv.setEmail(nv.getEmail().trim());
-        nv.setMaTaiKhoan(nv.getMaTaiKhoan().trim());
-        nv.setTrangThai(nv.getTrangThai().trim());
+        chuanHoaDuLieu(nv);
         if (!isTrangThaiHopLe(nv.getTrangThai())) {
             return false;
         }
@@ -56,14 +49,7 @@ public class NhanVienBUS {
         if (!isDuLieuHopLe(nv)) {
             return false;
         }
-        nv.setMaNhanVien(nv.getMaNhanVien().trim());
-        nv.setHo(nv.getHo().trim());
-        nv.setTen(nv.getTen().trim());
-        nv.setSoDienThoai(nv.getSoDienThoai().trim());
-        nv.setDiaChi(nv.getDiaChi().trim());
-        nv.setEmail(nv.getEmail().trim());
-        nv.setMaTaiKhoan(nv.getMaTaiKhoan().trim());
-        nv.setTrangThai(nv.getTrangThai().trim());
+        chuanHoaDuLieu(nv);
         if (!isTrangThaiHopLe(nv.getTrangThai())) {
             return false;
         }
@@ -132,5 +118,16 @@ public class NhanVienBUS {
 
     public String generateMaNhanVien() {
         return nhanVienDAO.generateMaNhanVien();
+    }
+
+    private void chuanHoaDuLieu(NhanVien nv) {
+        nv.setMaNhanVien(nv.getMaNhanVien().trim());
+        nv.setHo(nv.getHo().trim());
+        nv.setTen(nv.getTen().trim());
+        nv.setSoDienThoai(nv.getSoDienThoai().trim());
+        nv.setDiaChi(nv.getDiaChi().trim());
+        nv.setEmail(nv.getEmail().trim());
+        nv.setMaTaiKhoan(nv.getMaTaiKhoan().trim());
+        nv.setTrangThai(nv.getTrangThai().trim());
     }
 }

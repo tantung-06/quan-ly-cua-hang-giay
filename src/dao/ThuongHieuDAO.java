@@ -17,10 +17,7 @@ public class ThuongHieuDAO {
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                ThuongHieu th = new ThuongHieu(
-                        rs.getString("maThuongHieu"),
-                        rs.getString("tenThuongHieu"));
-                ds.add(th);
+                ds.add(mapRow(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -64,5 +61,26 @@ public class ThuongHieuDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public String generateMaThuongHieu() {
+        String sql = "SELECT COALESCE(MAX(CAST(SUBSTRING(maThuongHieu, 3) AS UNSIGNED)), 0) + 1 AS nextCode "
+                + "FROM ThuongHieu WHERE maThuongHieu REGEXP '^TH[0-9]+$'";
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return String.format("TH%03d", rs.getInt("nextCode"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private ThuongHieu mapRow(ResultSet rs) throws SQLException {
+        return new ThuongHieu(
+                rs.getString("maThuongHieu"),
+                rs.getString("tenThuongHieu"));
     }
 }
