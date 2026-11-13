@@ -38,7 +38,7 @@ public final class Login extends JFrame {
     private final JButton loginButton = new JButton("Đăng nhập");
 
     public Login() {
-        super("Sneaker Store | Đăng nhập");
+        super("Đăng nhập");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(760, 520));
         setSize(920, 600);
@@ -155,9 +155,6 @@ public final class Login extends JFrame {
         String pass = new String(secret);
         Arrays.fill(secret, '\0');
         loginButton.setEnabled(false);
-        loginButton.setText("Đang xác thực...");
-        message.setForeground(UiTheme.MUTED);
-        message.setText("Đang kết nối đến hệ thống...");
 
         new SwingWorker<TaiKhoan, Void>() {
             @Override
@@ -175,7 +172,6 @@ public final class Login extends JFrame {
             @Override
             protected void done() {
                 loginButton.setEnabled(true);
-                loginButton.setText("Đăng nhập");
                 try {
                     TaiKhoan account = get();
                     if (account == null) {

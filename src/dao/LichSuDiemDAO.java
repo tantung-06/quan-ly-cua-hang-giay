@@ -22,7 +22,7 @@ public class LichSuDiemDAO {
     }
 
     public void insert(Connection connection, LichSuDiem entry) throws SQLException {
-        String sql = "INSERT INTO LichSuDiem(maKhachHang,maPhieuXuat,loai,soDiem,diemSau) VALUES(?,?,?,?,?)";
+        String sql = "INSERT INTO LichSuDiem(maKhachHang,maHoaDon,loai,soDiem,diemSau) VALUES(?,?,?,?,?)";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, entry.getMaKhachHang());
             statement.setString(2, entry.getMaHoaDon());
@@ -44,7 +44,7 @@ public class LichSuDiemDAO {
             try (ResultSet rows = statement.executeQuery()) {
                 while (rows.next()) {
                     entries.add(new LichSuDiem(rows.getLong("maLichSu"), rows.getString("maKhachHang"),
-                            rows.getString("maPhieuXuat"), rows.getString("loai"), rows.getInt("soDiem"),
+                            rows.getString("maHoaDon"), rows.getString("loai"), rows.getInt("soDiem"),
                             rows.getInt("diemSau"), rows.getTimestamp("thoiGian").toLocalDateTime()));
                 }
             }

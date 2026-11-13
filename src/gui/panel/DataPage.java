@@ -44,8 +44,6 @@ public class DataPage extends JPanel {
     private final JTextField search = new JTextField();
     private final JComboBox<String> statusFilter = new JComboBox<>();
     private final int statusColumn;
-    private final JLabel resultCount = new JLabel(" ");
-    private final JLabel status = new JLabel(" ");
     private final List<Object> loadedRows = new ArrayList<>();
     private SwingWorker<List<?>, Void> worker;
 
@@ -196,20 +194,10 @@ public class DataPage extends JPanel {
         scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         tableCard.add(scroll, BorderLayout.CENTER);
 
-        JPanel bottom = new JPanel(new BorderLayout());
-        bottom.setOpaque(false);
-        resultCount.setFont(UiTheme.regular(12));
-        resultCount.setForeground(UiTheme.MUTED);
-        status.setFont(UiTheme.regular(12));
-        status.setForeground(UiTheme.MUTED);
-        bottom.add(resultCount, BorderLayout.WEST);
-        bottom.add(status, BorderLayout.EAST);
-
         JPanel center = new JPanel(new BorderLayout(0, 12));
         center.setOpaque(false);
         center.add(toolbar, BorderLayout.NORTH);
         center.add(tableCard, BorderLayout.CENTER);
-        center.add(bottom, BorderLayout.SOUTH);
         add(heading, BorderLayout.NORTH);
         add(center, BorderLayout.CENTER);
     }
@@ -218,8 +206,6 @@ public class DataPage extends JPanel {
         if (worker != null && !worker.isDone()) {
             worker.cancel(true);
         }
-        status.setForeground(UiTheme.MUTED);
-        status.setText("Đang tải dữ liệu...");
         worker = new SwingWorker<List<?>, Void>() {
             @Override
             protected List<?> doInBackground() {
@@ -237,14 +223,9 @@ public class DataPage extends JPanel {
                         model.addRow(definition.rowMapper.apply(item));
                     }
                     updateStatusOptions();
-                    status.setText(items.isEmpty() ? "Chưa có dữ liệu" : "Đã cập nhật");
-                    status.setForeground(items.isEmpty() ? UiTheme.AMBER : UiTheme.GREEN);
-                    updateCount();
                 } catch (java.util.concurrent.CancellationException ignored) {
                     // A newer refresh has replaced this request.
                 } catch (Exception ex) {
-                    status.setForeground(UiTheme.DANGER);
-                    status.setText("Không thể tải dữ liệu");
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(DataPage.this,
                             "Không thể tải dữ liệu cho mục này.\n" + ex.getMessage(),
@@ -253,10 +234,6 @@ public class DataPage extends JPanel {
             }
         };
         worker.execute();
-    }
-
-    private void updateCount() {
-        resultCount.setText(String.format("Hiển thị %d / %d bản ghi", table.getRowCount(), model.getRowCount()));
     }
 
     private void applyFilters() {
@@ -287,7 +264,6 @@ public class DataPage extends JPanel {
                 }
             });
         }
-        updateCount();
     }
 
     private void updateStatusOptions() {
@@ -368,8 +344,6 @@ public class DataPage extends JPanel {
             return;
         }
         Object record = loadedRows.get(modelRow);
-        status.setForeground(UiTheme.MUTED);
-        status.setText("Đang tải chi tiết phiếu...");
         new SwingWorker<Object[][], Void>() {
             @Override
             protected Object[][] doInBackground() {
@@ -380,11 +354,8 @@ public class DataPage extends JPanel {
             protected void done() {
                 try {
                     Object[][] rows = get();
-                    status.setText("Đã tải chi tiết phiếu");
                     definition.editor.showView(DataPage.this, record, rows);
                 } catch (Exception ex) {
-                    status.setForeground(UiTheme.DANGER);
-                    status.setText("Không thể tải chi tiết phiếu");
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(DataPage.this,
                             "Không thể tải chi tiết phiếu.\n" + ex.getMessage(),
@@ -415,7 +386,7 @@ public class DataPage extends JPanel {
         if (answer != JOptionPane.YES_OPTION) {
             return;
         }
-        runMutation("Đang hủy phiếu...", "Không thể hủy phiếu",
+        runMutation("Không thể hủy phiếu",
                 "Phiếu đã thay đổi trạng thái hoặc không thể hủy.",
                 () -> definition.editor.cancel(record));
     }
@@ -459,7 +430,7 @@ public class DataPage extends JPanel {
         if ("Xác nhận xuất".equals(action) || "Thanh toán & xuất".equals(action)) {
             reason += ", tồn kho và điểm khách hàng";
         }
-        runMutation("Đang cập nhật trạng thái và tồn kho...", "Không thể hoàn tất phiếu",
+        runMutation("Không thể hoàn tất phiếu",
                 "Không thể hoàn tất phiếu. " + reason + " rồi thử lại.",
                 () -> definition.editor.complete(record));
     }
@@ -469,7 +440,7 @@ public class DataPage extends JPanel {
         if (changed == null) {
             return;
         }
-        runMutation("Đang lưu...", "Không thể lưu dữ liệu",
+        runMutation("Không thể lưu dữ liệu",
                 "Dữ liệu không hợp lệ hoặc thao tác bị từ chối. Kiểm tra các trường và dữ liệu liên quan.",
                 () -> definition.editor.save(changed, original == null));
     }
@@ -491,15 +462,12 @@ public class DataPage extends JPanel {
         if (answer != JOptionPane.YES_OPTION) {
             return;
         }
-        runMutation("Đang xóa...", "Không thể xóa dữ liệu",
+        runMutation("Không thể xóa dữ liệu",
                 "Không thể xóa bản ghi. Bản ghi có thể đang được sử dụng bởi dữ liệu khác.",
                 () -> definition.editor.delete(record));
     }
 
-    private void runMutation(String progress, String failureTitle, String failureMessage,
-            Supplier<Boolean> operation) {
-        status.setForeground(UiTheme.MUTED);
-        status.setText(progress);
+    private void runMutation(String failureTitle, String failureMessage, Supplier<Boolean> operation) {
         new SwingWorker<Boolean, Void>() {
             @Override
             protected Boolean doInBackground() {
@@ -512,14 +480,10 @@ public class DataPage extends JPanel {
                     if (get()) {
                         refresh();
                     } else {
-                        status.setForeground(UiTheme.DANGER);
-                        status.setText(failureTitle);
                         JOptionPane.showMessageDialog(DataPage.this, failureMessage,
                                 failureTitle, JOptionPane.WARNING_MESSAGE);
                     }
                 } catch (Exception ex) {
-                    status.setForeground(UiTheme.DANGER);
-                    status.setText(failureTitle);
                     Throwable cause = ex.getCause() == null ? ex : ex.getCause();
                     boolean validationError = cause instanceof IllegalArgumentException;
                     if (!validationError) {

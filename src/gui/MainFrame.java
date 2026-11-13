@@ -30,7 +30,6 @@ import javax.swing.SwingConstants;
 
 import dto.TaiKhoan;
 import gui.component.NavButton;
-import gui.component.StoreLogoIcon;
 import gui.component.VectorMenuIcon;
 import gui.module.ModuleDefinition;
 import gui.module.ModuleRegistry;
@@ -42,7 +41,7 @@ public final class MainFrame extends JFrame {
     private static final long serialVersionUID = 1L;
     private static final String HOME = "Trang chủ";
     private static final int SIDEBAR_WIDTH = 252;
-    private static final int HEADER_HEIGHT = 68;
+    private static final int PROFILE_HEIGHT = 68;
 
     private final TaiKhoan account;
     private final CardLayout pageLayout = new CardLayout();
@@ -70,8 +69,6 @@ public final class MainFrame extends JFrame {
 
         JPanel workspace = new JPanel(new BorderLayout());
         workspace.setBackground(UiTheme.BACKGROUND);
-        workspace.add(createHeader(), BorderLayout.NORTH);
-
         workspace.add(pageContainer, BorderLayout.CENTER);
 
         root.add(createSidebar(), BorderLayout.WEST);
@@ -95,30 +92,34 @@ public final class MainFrame extends JFrame {
     }
 
     private JPanel createBrand() {
-        JPanel brand = new JPanel(new BorderLayout(12, 0));
+        JPanel brand = new JPanel(new BorderLayout(4, 0));
         brand.setBackground(Color.WHITE);
-        brand.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 16));
-        brand.setPreferredSize(new Dimension(SIDEBAR_WIDTH, HEADER_HEIGHT));
+        brand.setBorder(BorderFactory.createEmptyBorder(0, 16, 0, 16));
+        brand.setPreferredSize(new Dimension(SIDEBAR_WIDTH, PROFILE_HEIGHT));
 
-        JLabel mark = new JLabel(new StoreLogoIcon());
-        JPanel brandText = new JPanel(new GridBagLayout());
-        brandText.setOpaque(false);
-        JPanel brandLabels = new JPanel(new GridLayout(2, 1, 0, 2));
-        brandLabels.setOpaque(false);
-        JLabel title = new JLabel("Sneaker Store");
-        title.setFont(UiTheme.bold(15));
-        title.setForeground(UiTheme.TEXT);
-        JLabel subtitle = new JLabel("Cửa hàng giày");
-        subtitle.setFont(UiTheme.regular(11));
-        subtitle.setForeground(UiTheme.MUTED);
-        brandLabels.add(title);
-        brandLabels.add(subtitle);
-        GridBagConstraints brandAlignment = new GridBagConstraints();
-        brandAlignment.weightx = 1;
-        brandAlignment.anchor = GridBagConstraints.LINE_START;
-        brandText.add(brandLabels, brandAlignment);
-        brand.add(mark, BorderLayout.WEST);
-        brand.add(brandText, BorderLayout.CENTER);
+        JPanel accountLabels = new JPanel(new GridLayout(2, 1, 0, 0));
+        accountLabels.setOpaque(false);
+        JLabel username = new JLabel(account.getTenDangNhap());
+        username.setFont(UiTheme.bold(18));
+        username.setForeground(UiTheme.TEXT);
+        username.setToolTipText(account.getTenDangNhap());
+        JLabel role = new JLabel(account.getTenNhomQuyen());
+        role.setFont(UiTheme.regular(11));
+        role.setForeground(UiTheme.MUTED);
+        accountLabels.add(username);
+        accountLabels.add(role);
+        Dimension labelSize = accountLabels.getPreferredSize();
+        accountLabels.setPreferredSize(new Dimension(Math.min(170, labelSize.width), labelSize.height));
+
+        JPanel accountInfo = new JPanel(new GridBagLayout());
+        accountInfo.setOpaque(false);
+        GridBagConstraints accountAlignment = new GridBagConstraints();
+        accountAlignment.anchor = GridBagConstraints.WEST;
+        accountAlignment.fill = GridBagConstraints.HORIZONTAL;
+        accountAlignment.weightx = 1;
+        accountInfo.add(accountLabels, accountAlignment);
+        brand.add(new AvatarLabel(account.getTenDangNhap()), BorderLayout.WEST);
+        brand.add(accountInfo, BorderLayout.CENTER);
         return brand;
     }
 
@@ -178,40 +179,6 @@ public final class MainFrame extends JFrame {
         footer.add(logout, BorderLayout.SOUTH);
 
         return footer;
-    }
-
-    private JPanel createHeader() {
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(Color.WHITE);
-        header.setPreferredSize(new Dimension(0, HEADER_HEIGHT));
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UiTheme.BORDER));
-        header.add(createAccountProfile(), BorderLayout.EAST);
-        return header;
-    }
-
-    private JPanel createAccountProfile() {
-        JPanel right = new JPanel(new GridBagLayout());
-        right.setOpaque(false);
-        right.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 24));
-        JPanel profile = new JPanel(new BorderLayout(10, 0));
-        profile.setOpaque(false);
-        JPanel accountLabels = new JPanel(new GridLayout(2, 1, 0, 2));
-        accountLabels.setOpaque(false);
-        JLabel username = new JLabel(account.getTenDangNhap());
-        username.setFont(UiTheme.bold(13));
-        username.setForeground(UiTheme.TEXT);
-        username.setToolTipText(account.getTenDangNhap());
-        JLabel accountCaption = new JLabel("Tài khoản đăng nhập");
-        accountCaption.setFont(UiTheme.regular(11));
-        accountCaption.setForeground(UiTheme.MUTED);
-        accountLabels.add(username);
-        accountLabels.add(accountCaption);
-        Dimension labelSize = accountLabels.getPreferredSize();
-        accountLabels.setPreferredSize(new Dimension(Math.min(180, labelSize.width), labelSize.height));
-        profile.add(new AvatarLabel(account.getTenDangNhap()), BorderLayout.WEST);
-        profile.add(accountLabels, BorderLayout.CENTER);
-        right.add(profile);
-        return right;
     }
 
     private void navigate(String name) {
@@ -279,7 +246,10 @@ public final class MainFrame extends JFrame {
             Graphics2D g = (Graphics2D) graphics.create();
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g.setColor(UiTheme.PRIMARY_SOFT);
-            g.fillOval(0, 0, getWidth(), getHeight());
+            int size = Math.min(36, Math.min(getWidth(), getHeight()));
+            int x = (getWidth() - size) / 2;
+            int y = (getHeight() - size) / 2;
+            g.fillOval(x, y, size, size);
             g.dispose();
             super.paintComponent(graphics);
         }

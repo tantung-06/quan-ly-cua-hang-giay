@@ -42,14 +42,18 @@ public class TaiKhoanDAO {
     }
 
     public TaiKhoan login(String tenDangNhap, String matKhau) {
-        String sql = "SELECT * FROM TaiKhoan WHERE tenDangNhap=? AND matKhau=? AND trangThai='HOAT_DONG'";
+        String sql = "SELECT tk.*, nq.tenNhomQuyen FROM TaiKhoan tk "
+                + "JOIN NhomQuyen nq ON nq.maNhomQuyen = tk.maNhomQuyen "
+                + "WHERE tk.tenDangNhap=? AND tk.matKhau=? AND tk.trangThai='HOAT_DONG'";
         try (Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, tenDangNhap);
             ps.setString(2, matKhau);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return mapRow(rs);
+                    TaiKhoan account = mapRow(rs);
+                    account.setTenNhomQuyen(rs.getString("tenNhomQuyen"));
+                    return account;
                 }
             }
         } catch (SQLException e) {

@@ -32,11 +32,8 @@ public class KhuyenMaiDAO {
         }
     }
 
-    /**
-     * Include legacy canceled settlements; pending receipts do not consume a code.
-     */
     public Set<String> getMaDaSuDung(Connection connection, String customerId) throws SQLException {
-        String sql = "SELECT maKhuyenMai FROM PhieuXuat WHERE maKhachHang=? AND maKhuyenMai IS NOT NULL "
+        String sql = "SELECT maKhuyenMai FROM HoaDon WHERE maKhachHang=? AND maKhuyenMai IS NOT NULL "
                 + "AND (trangThai='DA_XUAT' OR diemDaXuLy=TRUE)";
         Set<String> codes = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
