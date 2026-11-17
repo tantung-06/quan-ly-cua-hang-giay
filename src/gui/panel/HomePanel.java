@@ -19,7 +19,7 @@ import gui.UiTheme;
 
 public final class HomePanel extends JPanel {
     private static final long serialVersionUID = 1L;
-    private static final String IMAGE_PATH = "src/imgs/trang-chu.png";
+    private static final String IMAGE_PATH = "src/imgs/trang-chu3.png";
     private final BufferedImage image;
 
     public HomePanel() {

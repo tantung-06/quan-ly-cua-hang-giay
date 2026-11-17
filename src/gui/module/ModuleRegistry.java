@@ -588,7 +588,7 @@ public final class ModuleRegistry {
                 for (int i = 0; i < entries.size(); i++) {
                     LichSuDiem entry = entries.get(i);
                     boolean debit = "TRU".equals(entry.getLoai()) || "THU_HOI".equals(entry.getLoai());
-                    rows[i] = new Object[] { entry.getMaLichSu(), entry.getThoiGian().format(
+                    rows[i] = new Object[] { entry.getThoiGian().format(
                             java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
                             entry.getMaHoaDon(),
                             loyaltyTypeName(entry.getLoai()), (debit ? "-" : "+") + entry.getSoDiem(),
@@ -605,7 +605,7 @@ public final class ModuleRegistry {
                                 { "Khách hàng", customer.getHo() + " " + customer.getTen() },
                                 { "Điểm hiện có", Integer.toString(customer.getDiemTichLuy()) },
                                 { "Quy đổi", "10.000 VNĐ thực trả = 1 điểm; 1 điểm dùng = 1.000 VNĐ" }
-                        }, new String[] { "Mã", "Thời gian", "Hóa đơn", "Loại", "Biến động", "Điểm còn" }, rows);
+                        }, new String[] { "Thời gian", "Hóa đơn", "Loại", "Biến động", "Điểm còn" }, rows);
             }
         };
         modules.get("Nhà cung cấp").editor = new RecordEditor() {

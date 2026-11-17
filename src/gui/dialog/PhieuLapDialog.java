@@ -50,6 +50,8 @@ public final class PhieuLapDialog {
     private final JComboBox<NhaCungCap> supplierBox;
     private final JComboBox<KhachHangChoice> customerBox;
     private final JComboBox<SanPham> productBox;
+    private final JComboBox<String> paymentMethodBox = new JComboBox<>(
+            new String[] { "TIEN_MAT", "CHUYEN_KHOAN", "THE" });
     private final JSpinner quantity = new JSpinner(new SpinnerNumberModel(1, 1, 100000, 1));
     private final JTextField unitPrice = new JTextField("0");
     private JTable detailTable;
@@ -86,6 +88,23 @@ public final class PhieuLapDialog {
         if (sale) {
             customerBox.addActionListener(event -> loadCustomerPromotions());
         }
+        paymentMethodBox.setRenderer(new DefaultListCellRenderer() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public java.awt.Component getListCellRendererComponent(javax.swing.JList<?> list, Object value,
+                    int index, boolean selected, boolean focus) {
+                super.getListCellRendererComponent(list, value, index, selected, focus);
+                if ("TIEN_MAT".equals(value)) {
+                    setText("Tiền mặt");
+                } else if ("CHUYEN_KHOAN".equals(value)) {
+                    setText("Chuyển khoản");
+                } else if ("THE".equals(value)) {
+                    setText("Thẻ");
+                }
+                return this;
+            }
+        });
         productBox = new JComboBox<>(productData.stream()
                 .filter(item -> sale
                         ? "DANG_BAN".equals(item.getTrangThai()) && item.getSoLuongTon() > 0
@@ -299,6 +318,13 @@ public final class PhieuLapDialog {
         });
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         footer.setOpaque(false);
+        if (sale) {
+            JLabel paymentMethodLabel = new JLabel("Thanh toán");
+            paymentMethodLabel.setLabelFor(paymentMethodBox);
+            paymentMethodBox.setPreferredSize(new Dimension(150, 34));
+            footer.add(paymentMethodLabel);
+            footer.add(paymentMethodBox);
+        }
         footer.add(cancel);
         footer.add(save);
 
@@ -357,7 +383,7 @@ public final class PhieuLapDialog {
             draft.sale = new HoaDon(code, LocalDate.now(), employee.getMaNhanVien(),
                     customer == null ? null : customer.getMaKhachHang(),
                     promotion == null ? null : promotion.getMaKhuyenMai(),
-                    "TIEN_MAT", total, "CHO_XU_LY");
+                    (String) paymentMethodBox.getSelectedItem(), total, "CHO_XU_LY");
             draft.sale.setDiemSuDung(promotionPanel.getDiemSuDung());
             draft.saleLines = new ArrayList<>();
             for (int i = 0; i < lines.getRowCount(); i++) {
