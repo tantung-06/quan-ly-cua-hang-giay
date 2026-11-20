@@ -7,6 +7,8 @@ public class TaiKhoan {
     private String maNhomQuyen;
     private String tenNhomQuyen;
     private String trangThai;
+    private String quyenHan;
+    private String tenNhanVien;
 
     public TaiKhoan() {
     }
@@ -33,6 +35,18 @@ public class TaiKhoan {
 
     public void setTenDangNhap(String tenDangNhap) {
         this.tenDangNhap = tenDangNhap;
+    }
+
+    public String getTenNhanVien() {
+        return tenNhanVien;
+    }
+
+    public void setTenNhanVien(String tenNhanVien) {
+        this.tenNhanVien = tenNhanVien;
+    }
+
+    public String getTenHienThi() {
+        return tenNhanVien == null || tenNhanVien.isBlank() ? tenDangNhap : tenNhanVien.trim();
     }
 
     public String getMatKhau() {
@@ -62,6 +76,10 @@ public class TaiKhoan {
     public String getTrangThai() {
         return trangThai;
     }
+
+    public String getQuyenHan() { return quyenHan; }
+
+    public void setQuyenHan(String quyenHan) { this.quyenHan = quyenHan; }
 
     public void setTrangThai(String trangThai) {
         this.trangThai = trangThai;

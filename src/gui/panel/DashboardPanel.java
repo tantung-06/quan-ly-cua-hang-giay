@@ -1,19 +1,14 @@
 package gui.panel;
 
-import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.RenderingHints;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -23,30 +18,30 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 
-import bus.KhachHangBUS;
-import bus.NhanVienBUS;
-import bus.HoaDonBUS;
-import bus.SanPhamBUS;
 import dto.HoaDon;
-import dto.SanPham;
 import gui.UiFormats;
 import gui.UiTheme;
 
 public class DashboardPanel extends JPanel {
     private static final long serialVersionUID = 1L;
-    private static final DateTimeFormatter DATE_LABEL = DateTimeFormatter.ofPattern("dd/MM");
 
     private final String username;
     private final Consumer<String> navigate;
     private final boolean statistics;
+    private final Supplier<DashboardData> dataLoader;
     private final JLabel productsValue = new JLabel("—");
     private final JLabel customersValue = new JLabel("—");
     private final JLabel revenueValue = new JLabel("—");
     private final JLabel lowStockValue = new JLabel("—");
     private final JLabel salesSummary = new JLabel("Đang tải dữ liệu...");
+    private final JLabel subtitle = new JLabel();
+    private final JTextField startDate = new JTextField(10);
+    private final JTextField endDate = new JTextField(10);
+    private final JLabel periodMessage = new JLabel(" ");
     private final DefaultTableModel recentModel = new DefaultTableModel(
             new String[] { "Mã hóa đơn", "Ngày lập", "Khách hàng", "Tổng tiền", "Trạng thái" }, 0) {
         private static final long serialVersionUID = 1L;
@@ -64,15 +59,30 @@ public class DashboardPanel extends JPanel {
     }
 
     public DashboardPanel(String username, Consumer<String> navigate, boolean statistics) {
+        this(username, navigate, statistics, DashboardData::load);
+    }
+
+    DashboardPanel(String username, Consumer<String> navigate, boolean statistics,
+            Supplier<DashboardData> dataLoader) {
         this.username = username;
         this.navigate = navigate;
         this.statistics = statistics;
+        this.dataLoader = java.util.Objects.requireNonNull(dataLoader);
         setOpaque(false);
         setLayout(new BorderLayout(0, 20));
         buildInterface();
     }
 
     private void buildInterface() {
+        LocalDate today = LocalDate.now();
+        SalesPeriod initialPeriod = SalesPeriod.lastSevenDays(today);
+        startDate.setText(initialPeriod.start.format(SalesPeriod.DATE_FORMAT));
+        endDate.setText(initialPeriod.end.format(SalesPeriod.DATE_FORMAT));
+        add(createHeader(), BorderLayout.NORTH);
+        add(createBody(), BorderLayout.CENTER);
+    }
+
+    private JPanel createHeader() {
         JPanel top = new JPanel(new BorderLayout(0, 15));
         top.setOpaque(false);
         JPanel titleArea = new JPanel();
@@ -81,8 +91,8 @@ public class DashboardPanel extends JPanel {
         JLabel title = new JLabel(statistics ? "Thống kê bán hàng" : "Xin chào, " + username);
         title.setFont(UiTheme.bold(24));
         title.setForeground(UiTheme.TEXT);
-        JLabel subtitle = new JLabel(statistics
-                ? "Tổng hợp hoạt động kinh doanh trong 7 ngày gần nhất."
+        subtitle.setText(statistics
+                ? "Chọn khoảng thời gian để xem doanh thu và hóa đơn."
                 : "Đây là tình hình hoạt động của cửa hàng hôm nay.");
         subtitle.setFont(UiTheme.regular(13));
         subtitle.setForeground(UiTheme.MUTED);
@@ -104,18 +114,25 @@ public class DashboardPanel extends JPanel {
         refreshWrap.add(refresh);
         top.add(titleArea, BorderLayout.CENTER);
         top.add(refreshWrap, BorderLayout.EAST);
+        if (statistics) {
+            top.add(createPeriodFilter(), BorderLayout.SOUTH);
+        }
+        return top;
+    }
 
+    private JPanel createMetrics() {
         JPanel stats = new JPanel(new GridLayout(1, 4, 14, 0));
         stats.setOpaque(false);
         stats.setPreferredSize(new Dimension(0, 120));
         stats.add(new MetricCard("Tổng sản phẩm", productsValue, "Đang có trong danh mục", UiTheme.BLUE));
         stats.add(new MetricCard("Khách hàng", customersValue, "Hồ sơ khách hàng", UiTheme.GREEN));
-        stats.add(new MetricCard("Doanh thu hôm nay", revenueValue, "Từ hóa đơn đã xuất", UiTheme.PRIMARY));
+        stats.add(new MetricCard(statistics ? "Doanh thu trong kỳ" : "Doanh thu hôm nay", revenueValue,
+                "Từ hóa đơn đã xuất", UiTheme.PRIMARY));
         stats.add(new MetricCard("Sắp hết hàng", lowStockValue, "Sản phẩm còn tối đa 5 đôi", UiTheme.AMBER));
+        return stats;
+    }
 
-        JPanel chartCard = sectionCard("Doanh thu 7 ngày gần nhất", chart);
-        chartCard.setPreferredSize(new Dimension(0, 300));
-
+    private JPanel createInvoiceCard() {
         JTable recentTable = new JTable(recentModel);
         recentTable.setRowHeight(38);
         recentTable.setFont(UiTheme.regular(12));
@@ -149,18 +166,28 @@ public class DashboardPanel extends JPanel {
         JScrollPane recentScroll = new JScrollPane(recentTable);
         recentScroll.setBorder(null);
         recentScroll.getViewport().setBackground(Color.WHITE);
-        JPanel recentCard = sectionCard("Hóa đơn gần đây", recentScroll);
+        JPanel recentCard = sectionCard(statistics ? "Hóa đơn trong kỳ" : "Hóa đơn gần đây", recentScroll);
         recentCard.setPreferredSize(new Dimension(0, 300));
+        return recentCard;
+    }
 
+    private JPanel createBody() {
+        JPanel chartCard = sectionCard(statistics ? "Doanh thu trong kỳ" : "Doanh thu 7 ngày gần nhất", chart);
+        chartCard.setPreferredSize(new Dimension(0, 300));
         JPanel lower = new JPanel(new GridLayout(1, 2, 14, 0));
         lower.setOpaque(false);
         lower.add(chartCard);
-        lower.add(recentCard);
+        lower.add(createInvoiceCard());
 
         JPanel body = new JPanel(new BorderLayout(0, 16));
         body.setOpaque(false);
-        body.add(stats, BorderLayout.NORTH);
+        body.add(createMetrics(), BorderLayout.NORTH);
         body.add(lower, BorderLayout.CENTER);
+        body.add(createFooter(), BorderLayout.SOUTH);
+        return body;
+    }
+
+    private JPanel createFooter() {
         JPanel footer = new JPanel(new BorderLayout());
         footer.setOpaque(false);
         salesSummary.setFont(UiTheme.regular(12));
@@ -176,55 +203,78 @@ public class DashboardPanel extends JPanel {
             seeSales.addActionListener(event -> navigate.accept("Hóa đơn"));
             footer.add(seeSales, BorderLayout.EAST);
         }
-        body.add(footer, BorderLayout.SOUTH);
+        return footer;
+    }
 
-        add(top, BorderLayout.NORTH);
-        add(body, BorderLayout.CENTER);
+    private JPanel createPeriodFilter() {
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        controls.setOpaque(false);
+        JTextField[] fields = { startDate, endDate };
+        String[] labels = { "Từ ngày", "Đến ngày" };
+        for (int i = 0; i < fields.length; i++) {
+            JLabel label = new JLabel(labels[i]);
+            label.setLabelFor(fields[i]);
+            label.setFont(UiTheme.bold(12));
+            fields[i].setFont(UiTheme.regular(13));
+            fields[i].setToolTipText("dd/MM/yyyy");
+            fields[i].getAccessibleContext().setAccessibleName(labels[i] + " (dd/MM/yyyy)");
+            fields[i].setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(UiTheme.FIELD_BORDER),
+                    BorderFactory.createEmptyBorder(8, 10, 8, 10)));
+            fields[i].addActionListener(event -> refresh());
+            controls.add(label);
+            controls.add(fields[i]);
+        }
+        JButton apply = new JButton("Áp dụng");
+        apply.setFont(UiTheme.bold(12));
+        apply.setBackground(UiTheme.BLUE);
+        apply.setForeground(Color.WHITE);
+        apply.setFocusPainted(false);
+        apply.addActionListener(event -> refresh());
+        controls.add(apply);
+        JLabel format = new JLabel("dd/MM/yyyy");
+        format.setFont(UiTheme.regular(12));
+        format.setForeground(UiTheme.MUTED);
+        controls.add(format);
+
+        JPanel filter = new JPanel(new BorderLayout(0, 4));
+        filter.setOpaque(false);
+        filter.add(controls, BorderLayout.NORTH);
+        periodMessage.setFont(UiTheme.regular(12));
+        periodMessage.setForeground(UiTheme.DANGER);
+        filter.add(periodMessage, BorderLayout.SOUTH);
+        return filter;
     }
 
     public void refresh() {
+        final SalesPeriod period;
+        try {
+            LocalDate today = LocalDate.now();
+            period = statistics ? SalesPeriod.parse(startDate.getText(), endDate.getText())
+                    : SalesPeriod.lastSevenDays(today);
+        } catch (IllegalArgumentException ex) {
+            periodMessage.setText(ex.getMessage());
+            return;
+        }
+        periodMessage.setText(" ");
         if (worker != null && !worker.isDone()) {
             worker.cancel(true);
         }
         salesSummary.setText("Đang tải dữ liệu...");
+        salesSummary.setForeground(UiTheme.MUTED);
         worker = new SwingWorker<DashboardData, Void>() {
             @Override
             protected DashboardData doInBackground() {
-                List<SanPham> products = new SanPhamBUS().getAll();
-                List<HoaDon> sales = new HoaDonBUS().getAll();
-                int customers = new KhachHangBUS().getAll().size();
-                int employees = new NhanVienBUS().getAll().size();
-                return new DashboardData(products, sales, customers, employees);
+                return dataLoader.get();
             }
 
             @Override
             protected void done() {
+                if (isCancelled() || worker != this) {
+                    return;
+                }
                 try {
-                    DashboardData data = get();
-                    LocalDate today = LocalDate.now();
-                    double todayRevenue = 0;
-                    int todayOrders = 0;
-                    for (HoaDon sale : data.sales) {
-                        if (today.equals(sale.getNgayLap()) && "DA_XUAT".equals(sale.getTrangThai())) {
-                            todayRevenue += sale.getTongTien();
-                            todayOrders++;
-                        }
-                    }
-                    int lowStock = 0;
-                    for (SanPham product : data.products) {
-                        if (product.getSoLuongTon() <= 5
-                                && "DANG_BAN".equals(product.getTrangThai())) {
-                            lowStock++;
-                        }
-                    }
-                    productsValue.setText(Integer.toString(data.products.size()));
-                    customersValue.setText(Integer.toString(data.customers));
-                    revenueValue.setText(UiFormats.currency(todayRevenue));
-                    lowStockValue.setText(Integer.toString(lowStock));
-                    salesSummary.setText("Hôm nay có " + todayOrders + " đơn hàng hoàn tất · "
-                            + data.employees + " nhân viên trong hệ thống");
-                    chart.setSales(data.sales);
-                    updateRecentSales(data.sales);
+                    displayData(get(), period);
                 } catch (java.util.concurrent.CancellationException ignored) {
                     // A newer refresh has replaced this request.
                 } catch (Exception ex) {
@@ -240,9 +290,31 @@ public class DashboardPanel extends JPanel {
         worker.execute();
     }
 
+    private void displayData(DashboardData data, SalesPeriod period) {
+        LocalDate today = LocalDate.now();
+        SalesPeriod.Result result = period.summarize(data.sales);
+        SalesPeriod.Result metrics = statistics ? result
+                : new SalesPeriod(today, today).summarize(data.sales);
+        productsValue.setText(Integer.toString(data.products.size()));
+        customersValue.setText(Integer.toString(data.customers));
+        revenueValue.setText(UiFormats.currency(metrics.revenue));
+        lowStockValue.setText(Integer.toString(data.lowStockProducts));
+        salesSummary.setText((statistics ? "Trong kỳ có " : "Hôm nay có ")
+                + metrics.completed + " đơn hàng hoàn tất · "
+                + data.employees + " nhân viên trong hệ thống");
+        if (statistics) {
+            subtitle.setText("Từ " + period.start.format(SalesPeriod.DATE_FORMAT) + " đến "
+                    + period.end.format(SalesPeriod.DATE_FORMAT)
+                    + " · Sản phẩm, khách hàng và tồn kho là số liệu hiện tại.");
+        }
+        chart.setSales(period, result.buckets);
+        updateRecentSales(statistics ? result.sales : data.sales);
+    }
+
     private void updateRecentSales(List<HoaDon> sales) {
         recentModel.setRowCount(0);
-        for (int index = 0; index < Math.min(6, sales.size()); index++) {
+        int limit = statistics ? sales.size() : Math.min(6, sales.size());
+        for (int index = 0; index < limit; index++) {
             HoaDon sale = sales.get(index);
             recentModel.addRow(new Object[] { sale.getMaHoaDon(), sale.getNgayLap(),
                     sale.getMaKhachHang() == null ? "Khách lẻ" : sale.getMaKhachHang(),
@@ -287,87 +359,4 @@ public class DashboardPanel extends JPanel {
         }
     }
 
-    private static final class DashboardData {
-        final List<SanPham> products;
-        final List<HoaDon> sales;
-        final int customers;
-        final int employees;
-
-        DashboardData(List<SanPham> products, List<HoaDon> sales, int customers, int employees) {
-            this.products = products;
-            this.sales = sales;
-            this.customers = customers;
-            this.employees = employees;
-        }
-    }
-
-    private static final class SalesChart extends JPanel {
-        private static final long serialVersionUID = 1L;
-        private double[] dailySales = new double[7];
-
-        SalesChart() {
-            setOpaque(false);
-        }
-
-        void setSales(List<HoaDon> sales) {
-            LocalDate today = LocalDate.now();
-            dailySales = new double[7];
-            for (HoaDon sale : sales) {
-                if (!"DA_XUAT".equals(sale.getTrangThai()) || sale.getNgayLap() == null) {
-                    continue;
-                }
-                long daysAgo = java.time.temporal.ChronoUnit.DAYS.between(sale.getNgayLap(), today);
-                if (daysAgo >= 0 && daysAgo < dailySales.length) {
-                    dailySales[dailySales.length - 1 - (int) daysAgo] += sale.getTongTien();
-                }
-            }
-            repaint();
-        }
-
-        @Override
-        protected void paintComponent(Graphics graphics) {
-            super.paintComponent(graphics);
-            Graphics2D g = (Graphics2D) graphics.create();
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            int left = 42;
-            int right = 8;
-            int top = 12;
-            int bottom = 30;
-            int width = Math.max(1, getWidth() - left - right);
-            int height = Math.max(1, getHeight() - top - bottom);
-            double max = 0;
-            for (double value : dailySales) {
-                max = Math.max(max, value);
-            }
-            if (max == 0) {
-                max = 1;
-            }
-            g.setFont(UiTheme.regular(10));
-            FontMetrics metrics = g.getFontMetrics();
-            for (int line = 0; line <= 3; line++) {
-                int y = top + height - line * height / 3;
-                g.setColor(UiTheme.BORDER);
-                g.setStroke(new BasicStroke(1));
-                g.drawLine(left, y, left + width, y);
-                String amount = UiFormats.number(max * line / 3);
-                g.setColor(UiTheme.MUTED);
-                g.drawString(amount, Math.max(0, left - metrics.stringWidth(amount) - 7), y + 4);
-            }
-            int slot = width / 7;
-            LocalDate first = LocalDate.now().minusDays(6);
-            for (int index = 0; index < dailySales.length; index++) {
-                int barHeight = (int) Math.round(height * dailySales[index] / max);
-                int barWidth = Math.max(8, Math.min(28, slot / 2));
-                int x = left + index * slot + (slot - barWidth) / 2;
-                int y = top + height - barHeight;
-                g.setColor(index == dailySales.length - 1 ? UiTheme.PRIMARY : new Color(0x9CB9E8));
-                g.fillRoundRect(x, y, barWidth, Math.max(3, barHeight), 7, 7);
-                g.setColor(UiTheme.MUTED);
-                String day = first.plusDays(index).format(DATE_LABEL);
-                int labelX = x + (barWidth - metrics.stringWidth(day)) / 2;
-                g.drawString(day, labelX, top + height + 20);
-            }
-            g.dispose();
-        }
-    }
 }

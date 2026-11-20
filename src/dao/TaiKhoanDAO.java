@@ -42,8 +42,10 @@ public class TaiKhoanDAO {
     }
 
     public TaiKhoan login(String tenDangNhap, String matKhau) {
-        String sql = "SELECT tk.*, nq.tenNhomQuyen FROM TaiKhoan tk "
+        String sql = "SELECT tk.*, nq.tenNhomQuyen, TRIM(CONCAT_WS(' ', nv.ho, nv.ten)) AS tenNhanVien "
+                + "FROM TaiKhoan tk "
                 + "JOIN NhomQuyen nq ON nq.maNhomQuyen = tk.maNhomQuyen "
+                + "LEFT JOIN NhanVien nv ON nv.maTaiKhoan = tk.maTaiKhoan "
                 + "WHERE tk.tenDangNhap=? AND tk.matKhau=? AND tk.trangThai='HOAT_DONG'";
         try (Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
@@ -53,6 +55,12 @@ public class TaiKhoanDAO {
                 if (rs.next()) {
                     TaiKhoan account = mapRow(rs);
                     account.setTenNhomQuyen(rs.getString("tenNhomQuyen"));
+                    account.setTenNhanVien(rs.getString("tenNhanVien"));
+                    dto.NhomQuyen role = new NhomQuyenDAO().getByID(account.getMaNhomQuyen());
+                    if (role == null) {
+                        throw new IllegalStateException("Không thể tải quyền của tài khoản.");
+                    }
+                    account.setQuyenHan(role.getQuyenHan());
                     return account;
                 }
             }

@@ -3,6 +3,7 @@ package dto;
 public class NhomQuyen {
     private String maNhomQuyen;
     private String tenNhomQuyen;
+    private String quyenHan;
 
     public NhomQuyen() {
     }
@@ -11,6 +12,15 @@ public class NhomQuyen {
         this.maNhomQuyen = maNhomQuyen;
         this.tenNhomQuyen = tenNhomQuyen;
     }
+
+    public NhomQuyen(String maNhomQuyen, String tenNhomQuyen, String quyenHan) {
+        this(maNhomQuyen, tenNhomQuyen);
+        this.quyenHan = quyenHan;
+    }
+
+    public String getQuyenHan() { return quyenHan; }
+
+    public void setQuyenHan(String quyenHan) { this.quyenHan = quyenHan; }
 
     public String getMaNhomQuyen() {
         return maNhomQuyen;

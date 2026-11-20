@@ -19,4 +19,8 @@
    java -cp "out;lib/*" App
    ```
 
-4. Đăng nhập bằng tài khoản mẫu: **admin** / **123**.
+4. Đăng nhập bằng tài khoản: **admin** / **123**.
+
+## Phân quyền
+
+- Mặc định: **NQ001** có toàn quyền; **NQ002** quản lý sản phẩm, thuộc tính, phiếu nhập và nhà cung cấp; **NQ003** xem sản phẩm, xử lý hóa đơn, thêm/sửa khách hàng và xem khuyến mãi.

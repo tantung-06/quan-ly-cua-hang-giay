@@ -3,6 +3,7 @@ package dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -42,33 +43,39 @@ public class NhomQuyenDAO {
     }
 
     public boolean insert(NhomQuyen nq) {
-        String sql = "INSERT INTO NhomQuyen(maNhomQuyen,tenNhomQuyen) VALUES(?,?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, nq.getMaNhomQuyen());
-            ps.setString(2, nq.getTenNhomQuyen());
-            return ps.executeUpdate() > 0;
+        String sql = "INSERT INTO NhomQuyen(maNhomQuyen,tenNhomQuyen,quyenHan) VALUES(?,?,?)";
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            ensurePermissionColumn(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, nq.getMaNhomQuyen());
+                ps.setString(2, nq.getTenNhomQuyen());
+                ps.setString(3, nq.getQuyenHan());
+                return ps.executeUpdate() > 0;
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new IllegalArgumentException(
+                    "Không thể lưu phân quyền. Kiểm tra kết nối và quyền cập nhật cơ sở dữ liệu.", e);
         }
-        return false;
     }
 
     public boolean update(NhomQuyen nq) {
-        String sql = "UPDATE NhomQuyen SET tenNhomQuyen=? WHERE maNhomQuyen=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, nq.getTenNhomQuyen());
-            ps.setString(2, nq.getMaNhomQuyen());
-            return ps.executeUpdate() > 0;
+        String sql = "UPDATE NhomQuyen SET tenNhomQuyen=?,quyenHan=? WHERE maNhomQuyen=?";
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            ensurePermissionColumn(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, nq.getTenNhomQuyen());
+                ps.setString(2, nq.getQuyenHan());
+                ps.setString(3, nq.getMaNhomQuyen());
+                return ps.executeUpdate() > 0;
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new IllegalArgumentException(
+                    "Không thể lưu phân quyền. Kiểm tra kết nối và quyền cập nhật cơ sở dữ liệu.", e);
         }
-        return false;
     }
 
     public boolean delete(String maNhomQuyen) {
-        String sql = "DELETE FROM NhomQuyen WHERE maNhomQuyen=?";
+        String sql = "DELETE FROM NhomQuyen WHERE maNhomQuyen=? AND maNhomQuyen<>'NQ001'";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNhomQuyen);
@@ -97,6 +104,30 @@ public class NhomQuyenDAO {
     private NhomQuyen mapRow(ResultSet rs) throws SQLException {
         return new NhomQuyen(
                 rs.getString("maNhomQuyen"),
-                rs.getString("tenNhomQuyen"));
+                rs.getString("tenNhomQuyen"),
+                hasPermissionColumn(rs.getMetaData()) ? rs.getString("quyenHan") : null);
+    }
+
+    private boolean hasPermissionColumn(ResultSetMetaData columns) throws SQLException {
+        for (int i = 1; i <= columns.getColumnCount(); i++) {
+            if ("quyenHan".equalsIgnoreCase(columns.getColumnLabel(i)))
+                return true;
+        }
+        return false;
+    }
+
+    private void ensurePermissionColumn(Connection connection) throws SQLException {
+        try (PreparedStatement query = connection.prepareStatement("SELECT * FROM NhomQuyen WHERE 1=0");
+                ResultSet rows = query.executeQuery()) {
+            if (hasPermissionColumn(rows.getMetaData()))
+                return;
+        }
+        try (java.sql.Statement statement = connection.createStatement()) {
+            statement.executeUpdate("ALTER TABLE NhomQuyen ADD COLUMN quyenHan TEXT NULL");
+        } catch (SQLException ex) {
+            // A concurrent first save may already have added the column.
+            if (ex.getErrorCode() != 1060)
+                throw ex;
+        }
     }
 }

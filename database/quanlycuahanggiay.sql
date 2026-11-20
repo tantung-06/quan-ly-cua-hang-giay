@@ -7,6 +7,7 @@ USE QuanLyCuaHangGiay;
 CREATE TABLE NhomQuyen (
     maNhomQuyen VARCHAR(20) NOT NULL,
     tenNhomQuyen VARCHAR(100) NOT NULL,
+    quyenHan TEXT NULL,
     CONSTRAINT PK_NhomQuyen PRIMARY KEY (maNhomQuyen)
 ) ENGINE=InnoDB;
 

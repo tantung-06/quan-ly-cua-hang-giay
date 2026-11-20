@@ -48,6 +48,9 @@ import gui.dialog.HoaDonDialog;
 import gui.dialog.SanPhamDialog;
 import gui.dialog.TaiKhoanDialog;
 import gui.dialog.ThuocTinhDialog;
+import security.AccessPolicy;
+import security.PermissionModule;
+import static security.PermissionAction.VIEW;
 
 public final class ModuleRegistry {
     private final TaiKhoan account;
@@ -168,7 +171,24 @@ public final class ModuleRegistry {
                                     item.getNgayBatDau(), item.getNgayKetThuc(), item.getTrangThai() };
                         }));
         configureCrud(result);
-        return result;
+        return authorize(result);
+    }
+
+    private Map<String, ModuleDefinition> authorize(Map<String, ModuleDefinition> modules) {
+        AccessPolicy policy = new AccessPolicy(account);
+        Map<String, ModuleDefinition> allowed = new LinkedHashMap<>();
+        modules.forEach((label, definition) -> {
+            PermissionModule module = PermissionModule.fromLabel(label);
+            if (!policy.can(module, VIEW)) return;
+            ModuleDefinition secured = new ModuleDefinition(definition.title, definition.description,
+                    definition.columns, () -> {
+                        policy.require(module, VIEW);
+                        return definition.loader.get();
+                    }, definition.rowMapper);
+            secured.editor = new AuthorizedEditor(definition.editor, policy, module);
+            allowed.put(label, secured);
+        });
+        return allowed;
     }
 
     private void configureCrud(Map<String, ModuleDefinition> modules) {
@@ -667,13 +687,35 @@ public final class ModuleRegistry {
             @Override
             public Object show(Component parent, Object record) {
                 TaiKhoan item = (TaiKhoan) record;
+                ArrayList<NhomQuyen> roles = new NhomQuyenBUS().getAll();
+                if (roles.isEmpty()) {
+                    showInvalid(parent, "Cần có nhóm quyền trước khi tạo tài khoản.");
+                    return null;
+                }
+                String[] roleOptions = roles.stream()
+                        .map(role -> role.getMaNhomQuyen() + " - " + role.getTenNhomQuyen())
+                        .toArray(String[]::new);
+                String defaultRole = roles.stream().map(NhomQuyen::getMaNhomQuyen)
+                        .filter(code -> !AccessPolicy.ADMIN_ROLE.equals(code)).findFirst()
+                        .orElse(roles.get(0).getMaNhomQuyen());
+                String selectedRole = findOption(roleOptions, item == null ? defaultRole : item.getMaNhomQuyen());
+                if (selectedRole == null) {
+                    showInvalid(parent, "Nhóm quyền của tài khoản không còn tồn tại.");
+                    return null;
+                }
                 String[] values = item == null
-                        ? new String[] { bus.generateMaTaiKhoan(), "", "", "", "HOAT_DONG" }
+                        ? new String[] { bus.generateMaTaiKhoan(), "", "", selectedRole, "HOAT_DONG" }
                         : new String[] { item.getMaTaiKhoan(), item.getTenDangNhap(), item.getMatKhau(),
-                                item.getMaNhomQuyen(), item.getTrangThai() };
-                String[] input = new TaiKhoanDialog(values, item != null)
+                                selectedRole, item.getTrangThai() };
+                String[] input = new TaiKhoanDialog(values, item != null, roleOptions)
                         .show(parent, item == null ? "Thêm tài khoản" : "Cập nhật tài khoản");
-                return input == null ? null : new TaiKhoan(input[0], input[1], input[2], input[3], input[4]);
+                if (input == null) return null;
+                if (account.getMaTaiKhoan().equals(input[0])
+                        && (!account.getMaNhomQuyen().equals(optionCode(input[3])) || !"HOAT_DONG".equals(input[4]))) {
+                    showInvalid(parent, "Không thể đổi nhóm quyền hoặc khóa tài khoản đang đăng nhập.");
+                    return null;
+                }
+                return new TaiKhoan(input[0], input[1], input[2], optionCode(input[3]), input[4]);
             }
 
             @Override
@@ -683,7 +725,11 @@ public final class ModuleRegistry {
 
             @Override
             public boolean delete(Object value) {
-                return bus.delete(((TaiKhoan) value).getMaTaiKhoan());
+                String code = ((TaiKhoan) value).getMaTaiKhoan();
+                if (account.getMaTaiKhoan().equals(code)) {
+                    throw new IllegalArgumentException("Không thể xóa tài khoản đang đăng nhập.");
+                }
+                return bus.delete(code);
             }
         };
         modules.get("Phân quyền").editor = new RecordEditor() {
@@ -692,11 +738,11 @@ public final class ModuleRegistry {
             @Override
             public Object show(Component parent, Object record) {
                 NhomQuyen item = (NhomQuyen) record;
-                String[] values = item == null ? new String[] { bus.generateMaNhomQuyen(), "" }
-                        : new String[] { item.getMaNhomQuyen(), item.getTenNhomQuyen() };
+                String[] values = item == null ? new String[] { bus.generateMaNhomQuyen(), "", "" }
+                        : new String[] { item.getMaNhomQuyen(), item.getTenNhomQuyen(), item.getQuyenHan() };
                 String[] input = new NhomQuyenDialog(values, item != null)
                         .show(parent, item == null ? "Thêm nhóm quyền" : "Cập nhật nhóm quyền");
-                return input == null ? null : new NhomQuyen(input[0], input[1]);
+                return input == null ? null : new NhomQuyen(input[0], input[1], input[2]);
             }
 
             @Override

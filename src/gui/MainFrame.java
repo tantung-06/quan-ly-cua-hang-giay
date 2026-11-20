@@ -36,6 +36,7 @@ import gui.module.ModuleRegistry;
 import gui.panel.DashboardPanel;
 import gui.panel.DataPage;
 import gui.panel.HomePanel;
+import security.AccessPolicy;
 
 public final class MainFrame extends JFrame {
     private static final long serialVersionUID = 1L;
@@ -44,6 +45,7 @@ public final class MainFrame extends JFrame {
     private static final int PROFILE_HEIGHT = 68;
 
     private final TaiKhoan account;
+    private final AccessPolicy access;
     private final CardLayout pageLayout = new CardLayout();
     private final JPanel pageContainer = new JPanel(pageLayout);
     private final JPanel navigation = new JPanel();
@@ -54,6 +56,7 @@ public final class MainFrame extends JFrame {
     public MainFrame(TaiKhoan account) {
         super("Hệ thống quản lý cửa hàng giày");
         this.account = account;
+        access = new AccessPolicy(account);
         definitions = new ModuleRegistry(account, this).create();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1180, 720));
@@ -99,14 +102,15 @@ public final class MainFrame extends JFrame {
 
         JPanel accountLabels = new JPanel(new GridLayout(2, 1, 0, 0));
         accountLabels.setOpaque(false);
-        JLabel username = new JLabel(account.getTenDangNhap());
-        username.setFont(UiTheme.bold(18));
-        username.setForeground(UiTheme.TEXT);
-        username.setToolTipText(account.getTenDangNhap());
+        String displayName = account.getTenHienThi();
+        JLabel employeeName = new JLabel(displayName);
+        employeeName.setFont(UiTheme.bold(16));
+        employeeName.setForeground(UiTheme.TEXT);
+        employeeName.setToolTipText(displayName);
         JLabel role = new JLabel(account.getTenNhomQuyen());
         role.setFont(UiTheme.regular(11));
         role.setForeground(UiTheme.MUTED);
-        accountLabels.add(username);
+        accountLabels.add(employeeName);
         accountLabels.add(role);
         Dimension labelSize = accountLabels.getPreferredSize();
         accountLabels.setPreferredSize(new Dimension(Math.min(170, labelSize.width), labelSize.height));
@@ -118,7 +122,7 @@ public final class MainFrame extends JFrame {
         accountAlignment.fill = GridBagConstraints.HORIZONTAL;
         accountAlignment.weightx = 1;
         accountInfo.add(accountLabels, accountAlignment);
-        brand.add(new AvatarLabel(account.getTenDangNhap()), BorderLayout.WEST);
+        brand.add(new AvatarLabel(displayName), BorderLayout.WEST);
         brand.add(accountInfo, BorderLayout.CENTER);
         return brand;
     }
@@ -143,6 +147,7 @@ public final class MainFrame extends JFrame {
         };
 
         for (String[] item : items) {
+            if (!access.canOpen(item[0])) continue;
             NavButton button = new NavButton(item[0], item[1], () -> navigate(item[0]));
             navButtons.add(button);
             navigation.add(button);
@@ -182,13 +187,18 @@ public final class MainFrame extends JFrame {
     }
 
     private void navigate(String name) {
+        if (!access.canOpen(name)) {
+            JOptionPane.showMessageDialog(this, "Bạn không có quyền truy cập chức năng này.",
+                    "Không có quyền truy cập", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         for (NavButton button : navButtons) {
             button.setSelected(button.getLabel().equals(name));
         }
         JPanel page = pages.get(name);
         if (page == null) {
             if (name.equals("Thống kê")) {
-                page = new DashboardPanel(account.getTenDangNhap(), this::navigate, true);
+                page = new DashboardPanel(account.getTenHienThi(), this::navigate, true);
             } else {
                 ModuleDefinition definition = definitions.get(name);
                 if (definition == null) {
